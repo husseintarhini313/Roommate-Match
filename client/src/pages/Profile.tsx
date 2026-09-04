@@ -1,6 +1,20 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 import { useNavigate } from "react-router-dom";
+import { Box, Container, Paper, Typography, Alert, Stack, Divider, CircularProgress } from "@mui/material";
+
+import NameField from "../components/Profile/NameField";
+import AgeField from "../components/Profile/AgeField";
+import BioField from "../components/Profile/BioField";
+import SmokesToggle from "../components/Profile/SmokesToggle";
+import PetsToggle from "../components/Profile/PetsToggle";
+import SleepScheduleSelect from "../components/Profile/SleepScheduleSelect";
+import NoisePreferenceSelect from "../components/Profile/NoisePreferenceSelect";
+import GuestFrequencySelect from "../components/Profile/GuestFrequencySelect";
+import CleanlinessSlider from "../components/Profile/CleanlinessSlider";
+import SocialLevelSlider from "../components/Profile/SocialLevelSlider";
+import BudgetField from "../components/Profile/BudgetField";
+import ProfileActions from "../components/Profile/ProfileActions";
 
 type Profile = {
   _id: string;
@@ -58,9 +72,7 @@ export default function Profile() {
     async function getProfile() {
       try {
         const result = await apiFetch<Profile>("/profile");
-
         setProfile(result);
-
         setFormData({
           name: result.name,
           age: result.age,
@@ -68,8 +80,7 @@ export default function Profile() {
           questionnaire: result.questionnaire,
         });
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Something went wrong";
+        const message = err instanceof Error ? err.message : "Something went wrong";
         if (message !== "Profile not found") {
           setError(message);
         }
@@ -79,6 +90,16 @@ export default function Profile() {
     }
     getProfile();
   }, []);
+
+  const updateQuestionnaire = <K extends keyof Profile["questionnaire"]>(
+    key: K,
+    value: Profile["questionnaire"][K]
+  ) => {
+    setFormData({
+      ...formData,
+      questionnaire: { ...formData.questionnaire, [key]: value },
+    });
+  };
 
   const handleCancel = () => {
     if (!profile) return;
@@ -93,7 +114,6 @@ export default function Profile() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setIsSubmitting(true);
 
     try {
@@ -102,7 +122,6 @@ export default function Profile() {
           method: "PATCH",
           body: JSON.stringify(formData),
         });
-
         setProfile(updated);
         setIsEditing(false);
       } else {
@@ -110,7 +129,6 @@ export default function Profile() {
           method: "POST",
           body: JSON.stringify(formData),
         });
-
         setProfile(created);
         navigate("/");
       }
@@ -121,295 +139,99 @@ export default function Profile() {
     }
   };
 
-  if (isLoading) return <p>Loading...</p>;
+  if (isLoading) {
+    return (
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h1>Profile</h1>
+    <Box sx={{ minHeight: "100vh", py: 8, bgcolor: "#F5EFE7" }}>
+      <Container maxWidth="sm">
+        <Paper elevation={0} sx={{ p: 5, borderRadius: 4 }}>
+          <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, color: "text.primary" }}>
+            My Profile
+          </Typography>
 
-      <label htmlFor="fullName">Full Name</label>
-      <input
-        id="fullName"
-        type="text"
-        name="name"
-        placeholder="Name"
-        value={formData.name}
-        required
-        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-        disabled={isReadOnly}
-      />
+          <Box component="form" onSubmit={handleSubmit} noValidate>
+            <Stack spacing={3}>
+              <Typography variant="subtitle2" color="text.secondary">ABOUT</Typography>
 
-      <label htmlFor="age">Age</label>
-      <input
-        id="age"
-        type="number"
-        name="age"
-        placeholder="Age"
-        min={18}
-        max={100}
-        value={formData.age}
-        required
-        onChange={(e) =>
-          setFormData({ ...formData, age: Number(e.target.value) })
-        }
-        disabled={isReadOnly}
-      />
+              <NameField
+                value={formData.name}
+                onChange={(value) => setFormData({ ...formData, name: value })}
+                disabled={isReadOnly}
+              />
+              <AgeField
+                value={formData.age}
+                onChange={(value) => setFormData({ ...formData, age: value })}
+                disabled={isReadOnly}
+              />
+              <BioField
+                value={formData.bio}
+                onChange={(value) => setFormData({ ...formData, bio: value })}
+                disabled={isReadOnly}
+              />
 
-      <label htmlFor="bio">About You</label>
-      <textarea
-        id="bio"
-        name="bio"
-        placeholder="Tell us a little about yourself"
-        value={formData.bio}
-        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-        disabled={isReadOnly}
-      />
+              <Divider />
+              <Typography variant="subtitle2" color="text.secondary">LIFESTYLE</Typography>
 
-      <fieldset disabled={isReadOnly}>
-        <legend>Do you smoke?</legend>
+              <SmokesToggle
+                value={formData.questionnaire.smokes}
+                onChange={(value) => updateQuestionnaire("smokes", value)}
+                disabled={isReadOnly}
+              />
+              <PetsToggle
+                value={formData.questionnaire.pets}
+                onChange={(value) => updateQuestionnaire("pets", value)}
+                disabled={isReadOnly}
+              />
+              <SleepScheduleSelect
+                value={formData.questionnaire.sleepSchedule}
+                onChange={(value) => updateQuestionnaire("sleepSchedule", value)}
+                disabled={isReadOnly}
+              />
+              <NoisePreferenceSelect
+                value={formData.questionnaire.noisePreference}
+                onChange={(value) => updateQuestionnaire("noisePreference", value)}
+                disabled={isReadOnly}
+              />
+              <GuestFrequencySelect
+                value={formData.questionnaire.guestFrequency}
+                onChange={(value) => updateQuestionnaire("guestFrequency", value)}
+                disabled={isReadOnly}
+              />
+              <CleanlinessSlider
+                value={formData.questionnaire.cleanliness}
+                onChange={(value) => updateQuestionnaire("cleanliness", value)}
+                disabled={isReadOnly}
+              />
+              <SocialLevelSlider
+                value={formData.questionnaire.socialLevel}
+                onChange={(value) => updateQuestionnaire("socialLevel", value)}
+                disabled={isReadOnly}
+              />
+              <BudgetField
+                value={formData.questionnaire.budget}
+                onChange={(value) => updateQuestionnaire("budget", value)}
+                disabled={isReadOnly}
+              />
 
-        <label>
-          <input
-            type="radio"
-            name="smokes"
-            value="true"
-            checked={formData.questionnaire.smokes}
-            onChange={() =>
-              setFormData({
-                ...formData,
-                questionnaire: {
-                  ...formData.questionnaire,
-                  smokes: true,
-                },
-              })
-            }
-          />
-          Yes
-        </label>
+              {error && <Alert severity="error">{error}</Alert>}
 
-        <label>
-          <input
-            type="radio"
-            name="smokes"
-            value="false"
-            checked={!formData.questionnaire.smokes}
-            onChange={() =>
-              setFormData({
-                ...formData,
-                questionnaire: {
-                  ...formData.questionnaire,
-                  smokes: false,
-                },
-              })
-            }
-          />
-          No
-        </label>
-      </fieldset>
-
-      <fieldset disabled={isReadOnly}>
-        <legend>Do you have any pets?</legend>
-
-        <label>
-          <input
-            type="radio"
-            name="pets"
-            value="true"
-            checked={formData.questionnaire.pets === true}
-            onChange={() =>
-              setFormData({
-                ...formData,
-                questionnaire: {
-                  ...formData.questionnaire,
-                  pets: true,
-                },
-              })
-            }
-          />
-          Yes
-        </label>
-
-        <label>
-          <input
-            type="radio"
-            name="pets"
-            value="false"
-            checked={formData.questionnaire.pets === false}
-            onChange={() =>
-              setFormData({
-                ...formData,
-                questionnaire: {
-                  ...formData.questionnaire,
-                  pets: false,
-                },
-              })
-            }
-          />
-          No
-        </label>
-      </fieldset>
-
-      <label htmlFor="sleepSchedule">Sleep Schedule</label>
-      <select
-        id="sleepSchedule"
-        name="sleepSchedule"
-        value={formData.questionnaire.sleepSchedule}
-        required
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            questionnaire: {
-              ...formData.questionnaire,
-              sleepSchedule: e.target.value as "early" | "late" | "flexible",
-            },
-          })
-        }
-        disabled={isReadOnly}
-      >
-        <option value="early">Early bird</option>
-        <option value="late">Night owl</option>
-        <option value="flexible">Flexible</option>
-      </select>
-
-      <label htmlFor="noisePreference">Preferred Noise Level</label>
-      <select
-        id="noisePreference"
-        name="noisePreference"
-        value={formData.questionnaire.noisePreference}
-        required
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            questionnaire: {
-              ...formData.questionnaire,
-              noisePreference: e.target.value as "quiet" | "moderate" | "loud",
-            },
-          })
-        }
-        disabled={isReadOnly}
-      >
-        <option value="quiet">Quiet</option>
-        <option value="moderate">Moderate</option>
-        <option value="loud">Loud</option>
-      </select>
-
-      <label htmlFor="guestFrequency">How Often Do You Have Guests?</label>
-      <select
-        name="guestFrequency"
-        id="guestFrequency"
-        value={formData.questionnaire.guestFrequency}
-        required
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            questionnaire: {
-              ...formData.questionnaire,
-              guestFrequency: e.target.value as
-                | "rarely"
-                | "sometimes"
-                | "often",
-            },
-          })
-        }
-        disabled={isReadOnly}
-      >
-        <option value="rarely">Rarely</option>
-        <option value="sometimes">Sometimes</option>
-        <option value="often">Often</option>
-      </select>
-
-      <div>
-        <label htmlFor="cleanliness">
-          Cleanliness: {formData.questionnaire.cleanliness}
-        </label>
-        <input
-          id="cleanliness"
-          type="range"
-          name="cleanliness"
-          min={1}
-          max={5}
-          value={formData.questionnaire.cleanliness}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              questionnaire: {
-                ...formData.questionnaire,
-                cleanliness: Number(e.target.value),
-              },
-            })
-          }
-          disabled={isReadOnly}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="socialLevel">
-          Social Level: {formData.questionnaire.socialLevel}
-        </label>
-        <input
-          id="socialLevel"
-          type="range"
-          name="socialLevel"
-          min={1}
-          max={5}
-          value={formData.questionnaire.socialLevel}
-          onChange={(e) =>
-            setFormData({
-              ...formData,
-              questionnaire: {
-                ...formData.questionnaire,
-                socialLevel: Number(e.target.value),
-              },
-            })
-          }
-          disabled={isReadOnly}
-        />
-      </div>
-
-      <label htmlFor="budget">Monthly Budget</label>
-      <input
-        id="budget"
-        type="number"
-        name="budget"
-        placeholder="Monthly budget"
-        value={formData.questionnaire.budget}
-        required
-        onChange={(e) =>
-          setFormData({
-            ...formData,
-            questionnaire: {
-              ...formData.questionnaire,
-              budget: Number(e.target.value),
-            },
-          })
-        }
-        disabled={isReadOnly}
-      />
-
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      {profile === null && (
-        <button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : "Create Profile"}
-        </button>
-      )}
-
-      {profile !== null && !isEditing && (
-        <button type="button" onClick={() => setIsEditing(true)}>
-          Edit
-        </button>
-      )}
-
-      {profile !== null && isEditing && (
-        <>
-          <button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving" : "Save"}
-          </button>
-          <button type="button" onClick={handleCancel}>
-            Cancel
-          </button>
-        </>
-      )}
-    </form>
+              <ProfileActions
+                hasProfile={profile !== null}
+                isEditing={isEditing}
+                isSubmitting={isSubmitting}
+                onEdit={() => setIsEditing(true)}
+                onCancel={handleCancel}
+              />
+            </Stack>
+          </Box>
+        </Paper>
+      </Container>
+    </Box>
   );
 }
