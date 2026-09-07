@@ -9,11 +9,14 @@ export async function apiFetch<T>(path:string,options?: RequestInit): Promise <T
     const fullPath= `${API_URL}${path}`;
     const token = localStorage.getItem("token");
 
+    const isFormData= options?.body instanceof FormData;
+    
     const response=await fetch(fullPath,{
         headers:{
-            "Content-Type": "application/json",
+            ...(isFormData ? {} : { "Content-Type": "application/json" }),
             ...(token ? {Authorization: `Bearer ${token}`}:{})
         },
+        cache: "no-store",
         ...options
     });
 
