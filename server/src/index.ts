@@ -4,6 +4,7 @@ import express from "express";
 import { errorHandler } from "./middlewares/errorHandler.js";
 import cors from "cors";
 import profileRouter from "./features/profile/profile.router.js";
+import postRouter from "./features/roommatePost/roommatePost.router.js";
 
 await db;
 
@@ -20,7 +21,7 @@ app.use(express.json());
 
 app.use('/api/auth', userRouter);
 app.use('/api/profile', profileRouter);
-
+app.use('/api/posts', postRouter);
 
 app.listen(Port, ()=>{
     console.log(`Server is running on port ${Port}`);
