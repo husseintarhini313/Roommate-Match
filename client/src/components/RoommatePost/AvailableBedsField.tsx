@@ -19,7 +19,7 @@ export default function AvailableBedsField({
       }}
       required
       fullWidth
-      slotProps={{ htmlInput: { min: 0 } }}
+      slotProps={{ htmlInput: { min: 1 } }}
     />
   );
 }

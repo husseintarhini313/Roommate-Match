@@ -16,6 +16,7 @@ export default function RulesField({ value, onChange }: RulesFieldProps) {
       multiline
       minRows={2}
       fullWidth
+      required
     />
   );
 }

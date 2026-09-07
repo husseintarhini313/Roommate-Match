@@ -1,7 +1,16 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "../api/client";
 import { useNavigate } from "react-router-dom";
-import { Box, Container, Paper, Typography, Alert, Stack, Divider, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Container,
+  Paper,
+  Typography,
+  Alert,
+  Stack,
+  Divider,
+  CircularProgress,
+} from "@mui/material";
 
 import NameField from "../components/Profile/NameField";
 import AgeField from "../components/Profile/AgeField";
@@ -80,7 +89,8 @@ export default function Profile() {
           questionnaire: result.questionnaire,
         });
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Something went wrong";
+        const message =
+          err instanceof Error ? err.message : "Something went wrong";
         if (message !== "Profile not found") {
           setError(message);
         }
@@ -93,7 +103,7 @@ export default function Profile() {
 
   const updateQuestionnaire = <K extends keyof Profile["questionnaire"]>(
     key: K,
-    value: Profile["questionnaire"][K]
+    value: Profile["questionnaire"][K],
   ) => {
     setFormData({
       ...formData,
@@ -130,7 +140,7 @@ export default function Profile() {
           body: JSON.stringify(formData),
         });
         setProfile(created);
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -141,7 +151,14 @@ export default function Profile() {
 
   if (isLoading) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <CircularProgress color="primary" />
       </Box>
     );
@@ -151,13 +168,18 @@ export default function Profile() {
     <Box sx={{ minHeight: "100vh", py: 8, bgcolor: "#F5EFE7" }}>
       <Container maxWidth="sm">
         <Paper elevation={0} sx={{ p: 5, borderRadius: 4 }}>
-          <Typography variant="h4" sx={{ mb: 4, fontWeight: 700, color: "text.primary" }}>
+          <Typography
+            variant="h4"
+            sx={{ mb: 4, fontWeight: 700, color: "text.primary" }}
+          >
             My Profile
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
-              <Typography variant="subtitle2" color="text.secondary">ABOUT</Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                ABOUT
+              </Typography>
 
               <NameField
                 value={formData.name}
@@ -176,7 +198,9 @@ export default function Profile() {
               />
 
               <Divider />
-              <Typography variant="subtitle2" color="text.secondary">LIFESTYLE</Typography>
+              <Typography variant="subtitle2" color="text.secondary">
+                LIFESTYLE
+              </Typography>
 
               <SmokesToggle
                 value={formData.questionnaire.smokes}
@@ -190,17 +214,23 @@ export default function Profile() {
               />
               <SleepScheduleSelect
                 value={formData.questionnaire.sleepSchedule}
-                onChange={(value) => updateQuestionnaire("sleepSchedule", value)}
+                onChange={(value) =>
+                  updateQuestionnaire("sleepSchedule", value)
+                }
                 disabled={isReadOnly}
               />
               <NoisePreferenceSelect
                 value={formData.questionnaire.noisePreference}
-                onChange={(value) => updateQuestionnaire("noisePreference", value)}
+                onChange={(value) =>
+                  updateQuestionnaire("noisePreference", value)
+                }
                 disabled={isReadOnly}
               />
               <GuestFrequencySelect
                 value={formData.questionnaire.guestFrequency}
-                onChange={(value) => updateQuestionnaire("guestFrequency", value)}
+                onChange={(value) =>
+                  updateQuestionnaire("guestFrequency", value)
+                }
                 disabled={isReadOnly}
               />
               <CleanlinessSlider

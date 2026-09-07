@@ -12,7 +12,10 @@ import {
 } from "@mui/material";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import type { Post } from "../../pages/CreatePost";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import BedIcon from "@mui/icons-material/Bed";
+import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
+import type { Post } from "../../types/post";
 
 type PostCardProps = {
   post: Post;
@@ -23,6 +26,7 @@ export default function PostCard({ post, actions }: PostCardProps) {
   const images =
     post.images.length > 0 ? post.images : ["/placeholder-room.png"];
   const [currentImage, setCurrentImage] = useState(0);
+  const [showAllAmenities, setShowAllAmenities] = useState(false);
 
   useEffect(() => {
     if (images.length <= 1) return;
@@ -121,11 +125,7 @@ export default function PostCard({ post, actions }: PostCardProps) {
       </Box>
 
       <CardContent>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="flex-start"
-        >
+        <Box sx={{ display: "flex", alignItems: "flex-start", width: "100%" }}>
           <Typography variant="h6" sx={{ fontWeight: 700 }}>
             {post.title}
           </Typography>
@@ -133,12 +133,16 @@ export default function PostCard({ post, actions }: PostCardProps) {
             label={post.status}
             size="small"
             color={post.status === "ACTIVE" ? "success" : "default"}
+            sx={{ ml: "auto" }}
           />
-        </Stack>
+        </Box>
 
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-          {post.location}
-        </Typography>
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 1 }}>
+          <LocationOnIcon fontSize="small" sx={{ color: "text.secondary" }} />
+          <Typography variant="body2" color="text.secondary">
+            {post.location}
+          </Typography>
+        </Stack>
 
         <Stack
           direction="row"
@@ -147,8 +151,11 @@ export default function PostCard({ post, actions }: PostCardProps) {
         >
           <Chip label={post.accommodationType} size="small" />
           <Chip
+            icon={<BedIcon fontSize="small" />}
             label={`${post.availableBeds}/${post.totalBeds} beds available`}
             size="small"
+            color="secondary"
+            variant="outlined"
           />
         </Stack>
 
@@ -158,19 +165,29 @@ export default function PostCard({ post, actions }: PostCardProps) {
             spacing={1}
             sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}
           >
-            {post.amenities.slice(0, 3).map((amenity) => (
+            {(showAllAmenities
+              ? post.amenities
+              : post.amenities.slice(0, 3)
+            ).map((amenity) => (
               <Chip
                 key={amenity}
+                icon={<CheckCircleOutlinedIcon fontSize="small" />}
                 label={amenity}
                 size="small"
-                variant="outlined"
+                sx={{ bgcolor: "success.light", color: "success.dark" }}
               />
             ))}
             {post.amenities.length > 3 && (
               <Chip
-                label={`+${post.amenities.length - 3} more`}
+                label={
+                  showAllAmenities
+                    ? "Show less"
+                    : `+${post.amenities.length - 3} more`
+                }
                 size="small"
                 variant="outlined"
+                onClick={() => setShowAllAmenities(!showAllAmenities)}
+                sx={{ cursor: "pointer" }}
               />
             )}
           </Stack>

@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/client";
-import { useNavigate } from "react-router-dom";
+import type { Post, PostFormData } from "../types/post";
 import {
   Box,
   Container,
@@ -10,7 +11,11 @@ import {
   Divider,
   Alert,
   Button,
+  CircularProgress,
+  IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+
 import TitleField from "../components/RoommatePost/TitleField";
 import DescriptionField from "../components/RoommatePost/DescriptionField";
 import LocationField from "../components/RoommatePost/LocationField";
@@ -23,12 +28,15 @@ import AmenitiesInput from "../components/RoommatePost/AmenitiesInput";
 import RulesField from "../components/RoommatePost/RulesField";
 import AvailableFromField from "../components/RoommatePost/AvailableFromField";
 import ImageUploadField from "../components/RoommatePost/ImageUploadField";
-import type { Post, PostFormData } from "../types/post";
 
-export default function CreatePost() {
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export default function EditPost() {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const [existingImages, setExistingImages] = useState<string[]>([]);
   const [formData, setFormData] = useState<PostFormData>({
     title: "",
     description: "",
@@ -44,19 +52,67 @@ export default function CreatePost() {
     images: [],
   });
 
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+  const visibleExistingImages = existingImages.filter(
+    (url) => !imagesToDelete.includes(url),
+  );
+
+  useEffect(() => {
+    async function fetchPost() {
+      try {
+        const post = await apiFetch<Post>(`/posts/${id}`);
+
+        setFormData({
+          title: post.title,
+          description: post.description,
+          location: post.location,
+          accommodationType: post.accommodationType,
+          totalBeds: post.totalBeds,
+          availableBeds: post.availableBeds,
+          monthlyRent: post.monthlyRent,
+          expenses: post.expenses,
+          amenities: post.amenities,
+          rules: post.rules,
+          availableFrom: post.availableFrom.slice(0, 10),
+          images: [],
+        });
+
+        setExistingImages(post.images);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load post");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchPost();
+  }, [id]);
+
+  const handleRemoveExistingImage = (imageUrl: string) => {
+    setImagesToDelete((prev) => [...prev, imageUrl]);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setError("");
-    setIsSubmitting(true);
 
-    if (formData.images.length === 0) {
-      setError("Please upload at least one photo.");
-      setIsSubmitting(false);
+    const remainingImageCount =
+      visibleExistingImages.length + formData.images.length;
+    if (remainingImageCount === 0) {
+      setError("A post must have at least one photo.");
       return;
     }
 
+    setIsSubmitting(true);
+
     try {
+      for (const imageUrl of imagesToDelete) {
+        await apiFetch(`/posts/${id}/images`, {
+          method: "DELETE",
+          body: JSON.stringify({ imageUrl }),
+        });
+      }
+
       const body = new FormData();
 
       body.append("title", formData.title);
@@ -73,8 +129,8 @@ export default function CreatePost() {
       formData.amenities.forEach((a) => body.append("amenities", a));
       formData.images.forEach((file) => body.append("images", file));
 
-      await apiFetch<Post>("/posts", {
-        method: "POST",
+      await apiFetch(`/posts/${id}`, {
+        method: "PATCH",
         body,
       });
 
@@ -86,6 +142,21 @@ export default function CreatePost() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: "100vh", py: 8, bgcolor: "#F5EFE7" }}>
       <Container maxWidth="sm">
@@ -94,7 +165,7 @@ export default function CreatePost() {
             variant="h4"
             sx={{ mb: 4, fontWeight: 700, color: "text.primary" }}
           >
-            Create a Post
+            Edit Post
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -189,6 +260,39 @@ export default function CreatePost() {
                 PHOTOS
               </Typography>
 
+              {existingImages.length > 0 && (
+                <Stack direction="row" spacing={2} sx={{ flexWrap: "wrap" }}>
+                  {visibleExistingImages.map((url) => (
+                    <Box key={url} sx={{ position: "relative" }}>
+                      <Box
+                        component="img"
+                        src={url}
+                        sx={{
+                          width: 80,
+                          height: 80,
+                          objectFit: "cover",
+                          borderRadius: 2,
+                        }}
+                      />
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveExistingImage(url)}
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          bgcolor: "background.paper",
+                          boxShadow: 1,
+                          "&:hover": { bgcolor: "grey.100" },
+                        }}
+                      >
+                        <CloseIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ))}
+                </Stack>
+              )}
+
               <ImageUploadField
                 value={formData.images}
                 onChange={(value) =>
@@ -207,9 +311,8 @@ export default function CreatePost() {
                   disabled={isSubmitting}
                   fullWidth
                 >
-                  {isSubmitting ? "Creating..." : "Create Post"}
+                  {isSubmitting ? "Saving..." : "Save Changes"}
                 </Button>
-
                 <Button
                   type="button"
                   variant="outlined"

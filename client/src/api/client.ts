@@ -16,6 +16,7 @@ export async function apiFetch<T>(path:string,options?: RequestInit): Promise <T
             ...(isFormData ? {} : { "Content-Type": "application/json" }),
             ...(token ? {Authorization: `Bearer ${token}`}:{})
         },
+        cache: "no-store",
         ...options
     });
 

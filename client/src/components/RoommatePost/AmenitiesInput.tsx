@@ -23,6 +23,7 @@ export default function AmenitiesInput({
           {...params}
           label="Amenities"
           placeholder="Type and press Enter"
+          required
         />
       )}
     />

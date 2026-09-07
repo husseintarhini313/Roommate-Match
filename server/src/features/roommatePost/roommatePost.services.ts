@@ -12,6 +12,10 @@ export async function createPost(userId:string,data:CreatePost, files: Express.M
     if(activePost)
         throw new Error("You already have an active post")
 
+    if (data.availableBeds > data.totalBeds) 
+        throw new Error("Available beds cannot exceed total beds");
+
+
     const imageURLs= await uploadImagesToSupabase(files);
 
     const post = await RoommatePost.create({
@@ -29,6 +33,12 @@ export async function getMyPosts(userId:string){
     return RoommatePost.find({createdBy: userId}).sort({createdAt:-1});
 }
 
+export async function getPostById(postId: string, userId: string) {
+  const post = await RoommatePost.findOne({ _id: postId, createdBy: userId });
+  if (!post) throw new Error("Post not found");
+  return post;
+}
+
 export async function getPosts(filters: {status?:string; location?:string, maxRent?:number}){
     const query :Record<string, unknown>={};
 
@@ -42,34 +52,41 @@ export async function getPosts(filters: {status?:string; location?:string, maxRe
 }
 
 
-export async function updatePost(userId:string, postId:string, data:UpdatePost, files:Express.Multer.File[]){
 
-    const updateData: Record<string, unknown>= {...data};
+export async function updatePost(userId: string,postId: string,data: UpdatePost,files: Express.Multer.File[]) {
+  const existingPost = await RoommatePost.findOne({
+    _id: postId,
+    createdBy: userId,
+  });
 
-    if(files && files.length>0){
-        const existingPost = await RoommatePost.findOne({
-            _id:postId,
-            createdBy:userId
-        })
+  if (!existingPost) throw new Error("Post not found");
 
-        if(!existingPost)
-            throw new Error("Post not found")
+  const effectiveTotalBeds = data.totalBeds ?? existingPost.totalBeds;
+  const effectiveAvailableBeds = data.availableBeds ?? existingPost.availableBeds;
 
-        const newImageUrls= await uploadImagesToSupabase(files);
-        updateData.images=[...existingPost.images, ...newImageUrls];
-    }
+  if (effectiveAvailableBeds > effectiveTotalBeds) {
+    throw new Error("Available beds cannot exceed total beds");
+  }
 
-    const post = await RoommatePost.findOneAndUpdate(
-        {_id:postId, createdBy:userId},
-        {$set:updateData},
-        {new:true}
-    );
+  const updateData: Record<string, unknown> = { ...data };
 
-    if(!post)
-        throw new Error("Post not found");
+  if (files && files.length > 0) {
+    const newImageUrls = await uploadImagesToSupabase(files);
+    updateData.images = [...existingPost.images, ...newImageUrls];
+  }
 
-    return post;
+  const post = await RoommatePost.findOneAndUpdate(
+    { _id: postId, createdBy: userId },
+    { $set: updateData },
+    { new: true }
+  );
+
+  if (!post) throw new Error("Post not found");
+
+  return post;
 }
+
+
 
 export async function deletePost(userId:string, postId:string){
     const post = await RoommatePost.findOneAndDelete({

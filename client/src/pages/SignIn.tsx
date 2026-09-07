@@ -39,7 +39,7 @@ export default function SignIn() {
       localStorage.setItem("token", data.token);
       try {
         await apiFetch("/profile");
-        navigate("/");
+        navigate("/dashboard");
       } catch {
         navigate("/profile");
       }
