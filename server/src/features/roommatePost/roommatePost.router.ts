@@ -5,6 +5,7 @@ import { createPostSchema, updatePostSchema, deleteImageSchema} from "./roommate
 import {validate} from "../../middlewares/validate.js";
 import {createPost, deletePost, updatePost, deleteImages, getMyPosts, getPosts, getPostById, closePost, reopenPost} from "../roommatePost/roommatePost.services.js";
 import {upload} from "../../middlewares/multer.js";
+import RoommatePost from "./roommatePost.model.js";
 
 const postRouter = express.Router();
 
@@ -23,14 +24,19 @@ postRouter.post('/',
 
 
 postRouter.get('/',
-                async (req:Request, res:Response)=>{
+                validateToken,
+                async (req: Request, res:Response)=>{
 
-                    const {status, location, maxRent}= req.query;
-                    const posts = await getPosts({status:status as string | undefined, 
-                                                  location:location as string | undefined,
-                                                  maxRent:maxRent? Number(maxRent): undefined});
+                     const userId= (req as any).userId;
+                     const { status, location, maxRent } = req.query;
 
-                    res.status(200).json(posts);
+                     const posts = await getPosts(userId, {
+                            status: status as string | undefined,
+                            location: location as string | undefined,
+                            maxRent: maxRent ? Number(maxRent) : undefined,
+                     });
+
+                     res.status(200).json(posts);
                 }
 )
 

@@ -16,7 +16,9 @@ import {
   Toolbar,
   IconButton,
   Tooltip,
+  Snackbar,
 } from "@mui/material";
+
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -36,6 +38,17 @@ export default function Dashboard() {
 
   const [locationFilter, setLocationFilter] = useState("");
   const [maxRentFilter, setMaxRentFilter] = useState("");
+
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const showSnackbar = (message: string) => {
+    setSnackbarOpen(false);
+    setTimeout(() => {
+      setSnackbarMessage(message);
+      setSnackbarOpen(true);
+    }, 150);
+  };
 
   useEffect(() => {
     async function fetchPosts() {
@@ -103,7 +116,9 @@ export default function Dashboard() {
 
       setPosts((prev) => prev.map((p) => (p._id === postId ? updated : p)));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to reopen post");
+      showSnackbar(
+        err instanceof Error ? err.message : "Failed to reopen post",
+      );
     }
   };
 
@@ -293,6 +308,22 @@ export default function Dashboard() {
 
         {renderContent()}
       </Container>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={4000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSnackbarOpen(false)}
+          severity="warning"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

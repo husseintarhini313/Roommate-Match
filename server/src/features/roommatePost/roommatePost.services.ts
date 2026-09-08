@@ -1,4 +1,6 @@
+import { calculateCompatibility, type Questionnaire } from "../../utils/matching.js";
 import { uploadImagesToSupabase, deleteImageFromSupabase } from "../../utils/supabase.js";
+import Profile from "../profile/profile.model.js";
 import type {CreatePost,UpdatePost} from "../roommatePost/roommatePost.schema.js";
 import RoommatePost from "./roommatePost.model.js";
 
@@ -39,14 +41,36 @@ export async function getPostById(postId: string, userId: string) {
   return post;
 }
 
-export async function getPosts(filters: {status?:string; location?:string, maxRent?:number}){
-      const query: Record<string, unknown> = { status: filters.status ?? "ACTIVE" };
+export async function getPosts(userId: string, filters: {status?:string; location?:string, maxRent?:number}){
+
+    const query: Record<string, unknown> = { status: filters.status ?? "ACTIVE", createdBy: { $ne: userId } };
 
     if(filters.location)
         query.location= {$regex: filters.location, $options:"i"}
     if(filters.maxRent !== undefined)
         query.monthlyRent= {$lte: filters.maxRent}
-    return RoommatePost.find(query).sort({createdAt: -1});
+
+    const posts = await RoommatePost.find(query).sort({createdAt: -1});
+
+    const viewerProfile = await Profile.findOne({userId});
+
+    if(!viewerProfile || !viewerProfile.questionnaire)
+        throw new Error("Please complete your profile before browsing posts");
+
+    const postsWithScores= await Promise.all(
+        posts.map( async (post)=>{
+
+            const creatorProfile = await Profile.findOne({userId:post.createdBy});
+
+            const compatibilityScore = creatorProfile ? calculateCompatibility(
+                viewerProfile.questionnaire as Questionnaire, creatorProfile.questionnaire as Questionnaire, post.monthlyRent + post.expenses
+            ) : null;
+
+            return {...post.toObject(), compatibilityScore};
+        })
+    );
+
+    return postsWithScores;
 }
 
 

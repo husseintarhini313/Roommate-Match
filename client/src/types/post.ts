@@ -14,6 +14,7 @@ export type Post = {
   availableFrom: string;
   status: "ACTIVE" | "FULL" | "CLOSED";
   images: string[];
+  compatibilityScore?: number | null;
 };
 
 export type PostFormData = {
