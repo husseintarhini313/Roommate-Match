@@ -40,10 +40,8 @@ export async function getPostById(postId: string, userId: string) {
 }
 
 export async function getPosts(filters: {status?:string; location?:string, maxRent?:number}){
-    const query :Record<string, unknown>={};
+      const query: Record<string, unknown> = { status: filters.status ?? "ACTIVE" };
 
-    if(filters.status)
-        query.status= filters.status;
     if(filters.location)
         query.location= {$regex: filters.location, $options:"i"}
     if(filters.maxRent !== undefined)
@@ -70,6 +68,10 @@ export async function updatePost(userId: string,postId: string,data: UpdatePost,
 
   const updateData: Record<string, unknown> = { ...data };
 
+  if (data.availableBeds !== undefined && existingPost.status !== "CLOSED") {
+     updateData.status = effectiveAvailableBeds === 0 ? "FULL" : "ACTIVE";
+  }
+
   if (files && files.length > 0) {
     const newImageUrls = await uploadImagesToSupabase(files);
     updateData.images = [...existingPost.images, ...newImageUrls];
@@ -86,7 +88,38 @@ export async function updatePost(userId: string,postId: string,data: UpdatePost,
   return post;
 }
 
+export async function closePost(userId:string, postId:string){
 
+    const post = await RoommatePost.findOneAndUpdate(
+        {createdBy:userId,_id:postId},
+        {$set:{status: "CLOSED"}},
+        {new:true}
+    );
+
+    if(!post)
+        throw new Error("Post not found")
+
+    return post;
+}
+
+export async function reopenPost(userId: string, postId: string) {
+
+  const activePost = await RoommatePost.findOne({ createdBy: userId, status: "ACTIVE" });
+  if (activePost) throw new Error("You already have an active post");
+
+  const post = await RoommatePost.findOne({ _id: postId, createdBy: userId });
+  if (!post) throw new Error("Post not found");
+
+  const newStatus = post.availableBeds === 0 ? "FULL" : "ACTIVE";
+
+  const updated = await RoommatePost.findOneAndUpdate(
+    { _id: postId, createdBy: userId },
+    { $set: { status: newStatus } },
+    { new: true }
+  );
+
+  return updated;
+}
 
 export async function deletePost(userId:string, postId:string){
     const post = await RoommatePost.findOneAndDelete({

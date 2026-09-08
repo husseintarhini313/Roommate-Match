@@ -82,6 +82,31 @@ export default function Dashboard() {
     navigate("/");
   };
 
+  const handleClosePost = async (postId: string) => {
+    try {
+      await apiFetch(`/posts/${postId}/close`, { method: "PATCH" });
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === postId ? { ...p, status: "CLOSED" as const } : p,
+        ),
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to close post");
+    }
+  };
+
+  const handleReopenPost = async (postId: string) => {
+    try {
+      const updated = await apiFetch<Post>(`/posts/${postId}/reopen`, {
+        method: "PATCH",
+      });
+
+      setPosts((prev) => prev.map((p) => (p._id === postId ? updated : p)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reopen post");
+    }
+  };
+
   function renderContent() {
     if (isLoading) {
       return (
@@ -133,6 +158,26 @@ export default function Dashboard() {
                     >
                       Edit
                     </Button>
+                    {post.status !== "CLOSED" && (
+                      <Button
+                        variant="outlined"
+                        color="warning"
+                        fullWidth
+                        onClick={() => handleClosePost(post._id)}
+                      >
+                        Close
+                      </Button>
+                    )}
+                    {post.status === "CLOSED" && (
+                      <Button
+                        variant="outlined"
+                        color="success"
+                        fullWidth
+                        onClick={() => handleReopenPost(post._id)}
+                      >
+                        Reopen
+                      </Button>
+                    )}
                     <Button
                       variant="outlined"
                       color="error"
