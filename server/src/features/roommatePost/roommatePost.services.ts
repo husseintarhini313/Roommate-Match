@@ -66,7 +66,7 @@ export async function getPosts(userId: string, filters: {status?:string; locatio
                 viewerProfile.questionnaire as Questionnaire, creatorProfile.questionnaire as Questionnaire, post.monthlyRent + post.expenses
             ) : null;
 
-            return {...post.toObject(), compatibilityScore};
+            return {...post.toObject(), compatibilityScore, creatorName: creatorProfile?.name ?? "Unknown"};
         })
     );
 

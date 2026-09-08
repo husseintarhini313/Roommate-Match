@@ -25,6 +25,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { apiFetch } from "../api/client";
 import PostCard from "../components/RoommatePost/PostCard";
+import ApplyDialog from "../components/RoommatePost/ApplyDialog";
 import type { Post } from "../types/post";
 
 type DashboardTab = "browse" | "mine" | "applied";
@@ -41,6 +42,9 @@ export default function Dashboard() {
 
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+
+  const [applyDialogOpen, setApplyDialogOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
   const showSnackbar = (message: string) => {
     setSnackbarOpen(false);
@@ -122,6 +126,27 @@ export default function Dashboard() {
     }
   };
 
+  const handleApplyClick = (post: Post) => {
+    setSelectedPost(post);
+    setApplyDialogOpen(true);
+  };
+
+  const handleConfirmApply = async (message: string) => {
+    if (!selectedPost) return;
+
+    try {
+      await apiFetch(`/requests/${selectedPost._id}`, {
+        method: "POST",
+        body: JSON.stringify({ message }),
+      });
+
+      setApplyDialogOpen(false);
+      showSnackbar("Application sent!");
+    } catch (err) {
+      showSnackbar(err instanceof Error ? err.message : "Failed to apply");
+    }
+  };
+
   function renderContent() {
     if (isLoading) {
       return (
@@ -157,13 +182,13 @@ export default function Dashboard() {
               post={post}
               actions={
                 activeTab === "browse" ? (
-                  <Tooltip title="Applications coming soon">
-                    <span>
-                      <Button variant="outlined" fullWidth disabled>
-                        Apply
-                      </Button>
-                    </span>
-                  </Tooltip>
+                  <Button
+                    variant="contained"
+                    fullWidth
+                    onClick={() => handleApplyClick(post)}
+                  >
+                    Apply
+                  </Button>
                 ) : (
                   <Box sx={{ display: "flex", gap: 1 }}>
                     <Button
@@ -324,6 +349,14 @@ export default function Dashboard() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      <ApplyDialog
+        open={applyDialogOpen}
+        post={selectedPost}
+        onClose={() => setApplyDialogOpen(false)}
+        onConfirm={handleConfirmApply}
+        onViewProfile={(userId) => navigate(`/profile/${userId}`)}
+      />
     </Box>
   );
 }
