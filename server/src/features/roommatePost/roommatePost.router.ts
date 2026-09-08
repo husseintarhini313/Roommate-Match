@@ -3,9 +3,8 @@ import type { Request, Response } from "express";
 import { validateToken } from "../../middlewares/authenticate.js";
 import { createPostSchema, updatePostSchema, deleteImageSchema} from "./roommatePost.schema.js";
 import {validate} from "../../middlewares/validate.js";
-import {createPost, deletePost, updatePost, deleteImages, getMyPosts, getPosts, getPostById} from "../roommatePost/roommatePost.services.js";
+import {createPost, deletePost, updatePost, deleteImages, getMyPosts, getPosts, getPostById, closePost, reopenPost} from "../roommatePost/roommatePost.services.js";
 import {upload} from "../../middlewares/multer.js";
-import { deleteImageFromSupabase } from "../../utils/supabase.js";
 
 const postRouter = express.Router();
 
@@ -74,6 +73,30 @@ postRouter.patch('/:id',
                 }   
 )
 
+postRouter.patch('/:id/close',
+                  validateToken,
+                  async (req:Request, res:Response)=>{
+                    const userId= (req as any).userId;
+                    const postId= req.params.id as string;
+
+                    const post = await closePost(userId, postId);
+
+                    res.status(200).json(post);
+                  }
+)
+
+postRouter.patch('/:id/reopen',
+                  validateToken,
+                  async (req:Request, res:Response)=>{
+
+                    const userId= (req as any).userId;
+                    const postId= req.params.id as string;
+
+                    const post = await reopenPost(userId, postId);
+
+                    res.status(200).json(post);
+                  }
+)
 
 postRouter.delete('/:id',
                    validateToken,

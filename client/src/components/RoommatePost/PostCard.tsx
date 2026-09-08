@@ -132,7 +132,13 @@ export default function PostCard({ post, actions }: PostCardProps) {
           <Chip
             label={post.status}
             size="small"
-            color={post.status === "ACTIVE" ? "success" : "default"}
+            color={
+              post.status === "ACTIVE"
+                ? "success"
+                : post.status === "FULL"
+                  ? "warning"
+                  : "default"
+            }
             sx={{ ml: "auto" }}
           />
         </Box>
