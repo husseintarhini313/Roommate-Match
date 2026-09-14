@@ -7,12 +7,27 @@ import { getProfile,createProfile, updateProfile } from "./profile.services.js";
 
 const profileRouter = express.Router();
 
-profileRouter.get('/', validateToken ,async (req:Request, res: Response)=>{
-    const userId= (req as any ).userId;
-    const profile= await getProfile(userId);
+profileRouter.get('/', 
+                   validateToken ,
+                   async (req:Request, res: Response)=>{
 
-    res.status(200).json(profile);
+                    const userId= (req as any ).userId;
+                    const profile= await getProfile(userId);
+
+                    res.status(200).json(profile);
 })
+
+profileRouter.get('/:userId',
+                   validateToken,
+                   async (req:Request, res:Response)=>{
+                    const userId = req.params.userId as string;
+                    const profile = await getProfile(userId);
+
+                    res.status(200).json(profile);
+                   }
+)
+
+
 
 profileRouter.post('/', 
                     validateToken,

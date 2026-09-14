@@ -11,7 +11,7 @@ export async function sendResetEmail(to:string, resetLink:string){
     const resend= getResend();
 
     await resend.emails.send({
-        from:"onboarding@resend.dev",
+        from:"no-reply@roommatch.xyz",
         to,
         subject:"Reset your RoomMatch password",
         html:`<p>Click the link to reset your password: </p><a href="${resetLink}">${resetLink}</a>`

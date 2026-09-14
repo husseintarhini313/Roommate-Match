@@ -60,7 +60,21 @@ export default function PostCard({ post, actions }: PostCardProps) {
             sx={{ width: "100%", height: 220, objectFit: "cover" }}
           />
         </Fade>
-
+        {post.compatibilityScore !== undefined &&
+          post.compatibilityScore !== null && (
+            <Chip
+              label={`${post.compatibilityScore}% match`}
+              size="small"
+              sx={{
+                position: "absolute",
+                top: 8,
+                right: 20,
+                bgcolor: "rgba(255,255,255,0.9)",
+                color: "primary.main",
+                fontWeight: 700,
+              }}
+            />
+          )}
         {images.length > 1 && (
           <>
             <IconButton

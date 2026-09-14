@@ -1,6 +1,9 @@
+import { calculateCompatibility, type Questionnaire } from "../../utils/matching.js";
 import { uploadImagesToSupabase, deleteImageFromSupabase } from "../../utils/supabase.js";
+import Profile from "../profile/profile.model.js";
 import type {CreatePost,UpdatePost} from "../roommatePost/roommatePost.schema.js";
 import RoommatePost from "./roommatePost.model.js";
+import RoommateRequest from "../request/request.model.js";
 
 export async function createPost(userId:string,data:CreatePost, files: Express.Multer.File[]){
 
@@ -39,14 +42,36 @@ export async function getPostById(postId: string, userId: string) {
   return post;
 }
 
-export async function getPosts(filters: {status?:string; location?:string, maxRent?:number}){
-      const query: Record<string, unknown> = { status: filters.status ?? "ACTIVE" };
+export async function getPosts(userId: string, filters: {status?:string; location?:string, maxRent?:number}){
+
+    const query: Record<string, unknown> = { status: filters.status ?? "ACTIVE", createdBy: { $ne: userId } };
 
     if(filters.location)
         query.location= {$regex: filters.location, $options:"i"}
     if(filters.maxRent !== undefined)
         query.monthlyRent= {$lte: filters.maxRent}
-    return RoommatePost.find(query).sort({createdAt: -1});
+
+    const posts = await RoommatePost.find(query).sort({createdAt: -1});
+
+    const viewerProfile = await Profile.findOne({userId});
+
+    if(!viewerProfile || !viewerProfile.questionnaire)
+        throw new Error("Please complete your profile before browsing posts");
+
+    const postsWithScores= await Promise.all(
+        posts.map( async (post)=>{
+
+            const creatorProfile = await Profile.findOne({userId:post.createdBy});
+
+            const compatibilityScore = creatorProfile ? calculateCompatibility(
+                viewerProfile.questionnaire as Questionnaire, creatorProfile.questionnaire as Questionnaire, post.monthlyRent + post.expenses
+            ) : null;
+
+            return {...post.toObject(), compatibilityScore, creatorName: creatorProfile?.name ?? "Unknown"};
+        })
+    );
+
+    return postsWithScores;
 }
 
 
@@ -121,16 +146,24 @@ export async function reopenPost(userId: string, postId: string) {
   return updated;
 }
 
-export async function deletePost(userId:string, postId:string){
-    const post = await RoommatePost.findOneAndDelete({
-        _id: postId,
-        createdBy:userId
-    })
 
-    if(!post)
-        throw new Error("Post not found");
 
-    return post;
+export async function deletePost(userId: string, postId: string) {
+  const hasAcceptedApplicant = await RoommateRequest.findOne({
+    postId,
+    status: "ACCEPTED",
+  });
+
+  if (hasAcceptedApplicant) {
+    throw new Error("You cannot delete a post with an accepted applicant. Close it instead.");
+  }
+
+  const post = await RoommatePost.findOneAndDelete({ _id: postId, createdBy: userId });
+  if (!post) throw new Error("Post not found");
+
+  await RoommateRequest.deleteMany({ postId });
+
+  return post;
 }
 
 export async function deleteImages(userId:string, postId:string, imageUrl:string){
