@@ -17,6 +17,7 @@ import {
   IconButton,
   Tooltip,
   Snackbar,
+  Chip,
 } from "@mui/material";
 
 import SearchIcon from "@mui/icons-material/Search";
@@ -27,6 +28,9 @@ import { apiFetch } from "../api/client";
 import PostCard from "../components/RoommatePost/PostCard";
 import ApplyDialog from "../components/RoommatePost/ApplyDialog";
 import type { Post } from "../types/post";
+import HostProfileDialog from "../components/Profile/HostProfileDialog";
+import ApplicantsDialog from "../components/RoommatePost/ApplicantDialog";
+import type { RequestWithPost } from "../types/request";
 
 type DashboardTab = "browse" | "mine" | "applied";
 
@@ -46,12 +50,25 @@ export default function Dashboard() {
   const [applyDialogOpen, setApplyDialogOpen] = useState(false);
   const [selectedPost, setSelectedPost] = useState<Post | null>(null);
 
+  const [hostProfileOpen, setHostProfileOpen] = useState(false);
+  const [selectedHostId, setSelectedHostId] = useState<string | null>(null);
+
+  const [applicantsDialogOpen, setApplicantsDialogOpen] = useState(false);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+
+  const [myRequests, setMyRequests] = useState<RequestWithPost[]>([]);
+
   const showSnackbar = (message: string) => {
     setSnackbarOpen(false);
     setTimeout(() => {
       setSnackbarMessage(message);
       setSnackbarOpen(true);
     }, 150);
+  };
+
+  const refetchPosts = async () => {
+    const result = await apiFetch<Post[]>("/posts/mine");
+    setPosts(result);
   };
 
   useEffect(() => {
@@ -70,8 +87,9 @@ export default function Dashboard() {
         } else if (activeTab === "mine") {
           const result = await apiFetch<Post[]>("/posts/mine");
           setPosts(result);
-        } else {
-          setPosts([]);
+        } else if (activeTab === "applied") {
+          const result = await apiFetch<RequestWithPost[]>("/requests/mine");
+          setMyRequests(result);
         }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong");
@@ -157,10 +175,42 @@ export default function Dashboard() {
     }
 
     if (activeTab === "applied") {
+      if (myRequests.length === 0) {
+        return (
+          <Typography color="text.secondary" align="center" sx={{ py: 8 }}>
+            You haven't applied to any posts yet.
+          </Typography>
+        );
+      }
+
       return (
-        <Typography color="text.secondary" align="center" sx={{ py: 8 }}>
-          Applications tracking is coming soon.
-        </Typography>
+        <Grid container spacing={3}>
+          {myRequests.map((request) => {
+            if (!request.post) return null;
+            return (
+              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={request._id}>
+                <PostCard
+                  post={request.post}
+                  actions={
+                    <Box sx={{ display: "flex", justifyContent: "center" }}>
+                      <Chip
+                        label={request.status}
+                        color={
+                          request.status === "ACCEPTED"
+                            ? "success"
+                            : request.status === "REJECTED"
+                              ? "default"
+                              : "warning"
+                        }
+                        sx={{ fontWeight: 700 }}
+                      />
+                    </Box>
+                  }
+                />
+              </Grid>
+            );
+          })}
+        </Grid>
       );
     }
 
@@ -218,6 +268,16 @@ export default function Dashboard() {
                         Reopen
                       </Button>
                     )}
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => {
+                        setSelectedPostId(post._id);
+                        setApplicantsDialogOpen(true);
+                      }}
+                    >
+                      View Applicants
+                    </Button>
                     <Button
                       variant="outlined"
                       color="error"
@@ -355,7 +415,23 @@ export default function Dashboard() {
         post={selectedPost}
         onClose={() => setApplyDialogOpen(false)}
         onConfirm={handleConfirmApply}
-        onViewProfile={(userId) => navigate(`/profile/${userId}`)}
+        onViewProfile={(userId) => {
+          setSelectedHostId(userId);
+          setHostProfileOpen(true);
+        }}
+      />
+
+      <HostProfileDialog
+        open={hostProfileOpen}
+        userId={selectedHostId}
+        onClose={() => setHostProfileOpen(false)}
+      />
+
+      <ApplicantsDialog
+        open={applicantsDialogOpen}
+        postId={selectedPostId}
+        onClose={() => setApplicantsDialogOpen(false)}
+        onActionComplete={refetchPosts}
       />
     </Box>
   );

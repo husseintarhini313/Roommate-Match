@@ -3,6 +3,7 @@ import { uploadImagesToSupabase, deleteImageFromSupabase } from "../../utils/sup
 import Profile from "../profile/profile.model.js";
 import type {CreatePost,UpdatePost} from "../roommatePost/roommatePost.schema.js";
 import RoommatePost from "./roommatePost.model.js";
+import RoommateRequest from "../request/request.model.js";
 
 export async function createPost(userId:string,data:CreatePost, files: Express.Multer.File[]){
 
@@ -145,16 +146,24 @@ export async function reopenPost(userId: string, postId: string) {
   return updated;
 }
 
-export async function deletePost(userId:string, postId:string){
-    const post = await RoommatePost.findOneAndDelete({
-        _id: postId,
-        createdBy:userId
-    })
 
-    if(!post)
-        throw new Error("Post not found");
 
-    return post;
+export async function deletePost(userId: string, postId: string) {
+  const hasAcceptedApplicant = await RoommateRequest.findOne({
+    postId,
+    status: "ACCEPTED",
+  });
+
+  if (hasAcceptedApplicant) {
+    throw new Error("You cannot delete a post with an accepted applicant. Close it instead.");
+  }
+
+  const post = await RoommatePost.findOneAndDelete({ _id: postId, createdBy: userId });
+  if (!post) throw new Error("Post not found");
+
+  await RoommateRequest.deleteMany({ postId });
+
+  return post;
 }
 
 export async function deleteImages(userId:string, postId:string, imageUrl:string){
