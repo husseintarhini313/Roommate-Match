@@ -18,11 +18,15 @@ import {
   Tooltip,
   Snackbar,
   Chip,
+  Stack,
+  Dialog,
+  DialogContent,
 } from "@mui/material";
-
+import AppliedToView from "../components/RoommatePost/AppliedToView";
 import SearchIcon from "@mui/icons-material/Search";
 import AddIcon from "@mui/icons-material/Add";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { apiFetch } from "../api/client";
 import PostCard from "../components/RoommatePost/PostCard";
@@ -57,6 +61,9 @@ export default function Dashboard() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const [myRequests, setMyRequests] = useState<RequestWithPost[]>([]);
+
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [detailsPost, setDetailsPost] = useState<Post | null>(null);
 
   const showSnackbar = (message: string) => {
     setSnackbarOpen(false);
@@ -109,6 +116,19 @@ export default function Dashboard() {
       setPosts((prev) => prev.filter((p) => p._id !== postId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete post");
+    }
+  };
+
+  const handleWithdraw = async (requestId: string) => {
+    try {
+      await apiFetch(`/requests/${requestId}/withdraw`, {
+        method: "DELETE",
+      });
+      setMyRequests((prev) => prev.filter((r) => r._id !== requestId));
+    } catch (err) {
+      showSnackbar(
+        err instanceof Error ? err.message : "Failed to withdraw application",
+      );
     }
   };
 
@@ -175,42 +195,15 @@ export default function Dashboard() {
     }
 
     if (activeTab === "applied") {
-      if (myRequests.length === 0) {
-        return (
-          <Typography color="text.secondary" align="center" sx={{ py: 8 }}>
-            You haven't applied to any posts yet.
-          </Typography>
-        );
-      }
-
       return (
-        <Grid container spacing={3}>
-          {myRequests.map((request) => {
-            if (!request.post) return null;
-            return (
-              <Grid size={{ xs: 12, sm: 6, md: 4 }} key={request._id}>
-                <PostCard
-                  post={request.post}
-                  actions={
-                    <Box sx={{ display: "flex", justifyContent: "center" }}>
-                      <Chip
-                        label={request.status}
-                        color={
-                          request.status === "ACCEPTED"
-                            ? "success"
-                            : request.status === "REJECTED"
-                              ? "default"
-                              : "warning"
-                        }
-                        sx={{ fontWeight: 700 }}
-                      />
-                    </Box>
-                  }
-                />
-              </Grid>
-            );
-          })}
-        </Grid>
+        <AppliedToView
+          requests={myRequests}
+          onWithdraw={handleWithdraw}
+          onViewDetails={(request) => {
+            setDetailsPost(request.post);
+            setDetailsDialogOpen(true);
+          }}
+        />
       );
     }
 
@@ -310,12 +303,17 @@ export default function Dashboard() {
       >
         <Container maxWidth="xl">
           <Toolbar sx={{ py: 1 }}>
-            <Typography
-              variant="h6"
-              sx={{ fontWeight: 700, color: "primary.main", mr: 4 }}
-            >
-              RoomMatch
-            </Typography>
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <HomeWorkOutlinedIcon
+                sx={{ color: "primary.main", fontSize: 26 }}
+              />
+              <Typography
+                variant="h5"
+                sx={{ fontWeight: 700, color: "primary.main" }}
+              >
+                RoomMatch
+              </Typography>
+            </Stack>
 
             <Box sx={{ flexGrow: 1 }} />
 
@@ -355,7 +353,7 @@ export default function Dashboard() {
         >
           <Tab label="Browse" value="browse" />
           <Tab label="My Posts" value="mine" />
-          <Tab label="Applied To" value="applied" />
+          <Tab label="My Applications" value="applied" />
         </Tabs>
 
         {activeTab === "browse" && (
@@ -433,6 +431,17 @@ export default function Dashboard() {
         onClose={() => setApplicantsDialogOpen(false)}
         onActionComplete={refetchPosts}
       />
+
+      <Dialog
+        open={detailsDialogOpen}
+        onClose={() => setDetailsDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0 }}>
+          {detailsPost && <PostCard post={detailsPost} actions={<Box />} />}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

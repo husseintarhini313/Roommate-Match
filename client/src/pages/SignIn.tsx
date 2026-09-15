@@ -102,7 +102,7 @@ export default function SignIn() {
               }}
             />
 
-            <Stack direction="row" justifyContent="flex-end" sx={{ mt: 1 }}>
+            <Stack direction="row" sx={{ justifyContent: "flex-end", mt: 1 }}>
               <Link
                 component={RouterLink}
                 to="/forgot-password"

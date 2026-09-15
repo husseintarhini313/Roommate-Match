@@ -17,6 +17,9 @@ export async function signupUser({email, password}: Signup ){
     return {id:user._id,email:user.email};
 }
 
+
+
+
 export async function signinUser({email, password}:Signin){
 
     const findUser= await User.findOne({email});
@@ -33,6 +36,9 @@ export async function signinUser({email, password}:Signin){
 
     return {id: findUser._id, email: findUser.email, token};
 }
+
+
+
 
 export async function forgotPassword({email}:ForgotPassword){
 
@@ -53,6 +59,9 @@ export async function forgotPassword({email}:ForgotPassword){
 
     await sendResetEmail(email, resetLink);
 }
+
+
+
 
 export async function resetPassword({token,newPassword}: ResetPassword){
 

@@ -1,19 +1,25 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
+  DialogActions,
   Button,
   Typography,
-  Chip,
-  Stack,
   Box,
+  Stack,
   CircularProgress,
   Alert,
-  Divider,
+  IconButton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import { apiFetch } from "../../api/client";
 import type { RequestWithApplicant } from "../../types/request";
+import ApplicantListItem from "./ApplicantListItem";
+import ApplicantDetailPanel from "./ApplicantDetailPanel";
+import HostProfileDialog from "../Profile/HostProfileDialog";
 
 type ApplicantDialogProps = {
   open: boolean;
@@ -28,10 +34,15 @@ export default function ApplicantsDialog({
   onClose,
   onActionComplete,
 }: ApplicantDialogProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
   const [requests, setRequests] = useState<RequestWithApplicant[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [actioningId, setActioningId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !postId) return;
@@ -44,6 +55,7 @@ export default function ApplicantsDialog({
           `/requests/post/${postId}`,
         );
         setRequests(result);
+        setSelectedId(result[0]?._id ?? null);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to load applicants",
@@ -52,20 +64,27 @@ export default function ApplicantsDialog({
         setIsLoading(false);
       }
     }
-
     fetchApplicants();
   }, [open, postId]);
+
+  const sortedRequests = useMemo(
+    () =>
+      [...requests].sort(
+        (a, b) => (b.compatibilityScore ?? 0) - (a.compatibilityScore ?? 0),
+      ),
+    [requests],
+  );
+
+  const selectedRequest =
+    sortedRequests.find((r) => r._id === selectedId) ?? null;
 
   const handleAccept = async (requestId: string) => {
     setActioningId(requestId);
     try {
-      await apiFetch(`/requests/${requestId}/accept`, {
-        method: "PATCH",
-      });
-
+      await apiFetch(`/requests/${requestId}/accept`, { method: "PATCH" });
       setRequests((prev) =>
-        prev.map((req) =>
-          req._id === requestId ? { ...req, status: "ACCEPTED" } : req,
+        prev.map((r) =>
+          r._id === requestId ? { ...r, status: "ACCEPTED" } : r,
         ),
       );
       onActionComplete();
@@ -79,12 +98,10 @@ export default function ApplicantsDialog({
   const handleReject = async (requestId: string) => {
     setActioningId(requestId);
     try {
-      await apiFetch(`/requests/${requestId}/reject`, {
-        method: "PATCH",
-      });
+      await apiFetch(`/requests/${requestId}/reject`, { method: "PATCH" });
       setRequests((prev) =>
-        prev.map((req) =>
-          req._id === requestId ? { ...req, status: "REJECTED" } : req,
+        prev.map((r) =>
+          r._id === requestId ? { ...r, status: "REJECTED" } : r,
         ),
       );
       onActionComplete();
@@ -96,102 +113,139 @@ export default function ApplicantsDialog({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ fontWeight: 700 }}>Applicants</DialogTitle>
-      <DialogContent>
-        {isLoading && (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-            <CircularProgress color="primary" />
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="lg"
+        fullWidth
+        fullScreen={isMobile}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Applicants
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              View and manage all applications for this post
+            </Typography>
           </Box>
-        )}
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {!isLoading && requests.length === 0 && (
-          <Typography color="text.secondary" sx={{ py: 4 }} align="center">
-            No applications yet.
-          </Typography>
-        )}
+          <IconButton onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+        </DialogTitle>
 
-        <Stack spacing={2}>
-          {requests.map((request, i) => (
-            <Box key={request._id}>
-              {i > 0 && <Divider sx={{ mb: 2 }} />}
-              <Stack
-                direction="row"
+        <DialogContent dividers sx={{ p: 0 }}>
+          {isLoading && (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+              <CircularProgress color="primary" />
+            </Box>
+          )}
+          {error && (
+            <Alert severity="error" sx={{ m: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          {!isLoading && sortedRequests.length === 0 && (
+            <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
+              No applications yet.
+            </Typography>
+          )}
+
+          {!isLoading && sortedRequests.length > 0 && (
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              sx={{ height: { md: "65vh" } }}
+            >
+              <Box
                 sx={{
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  mb: 1,
+                  width: { xs: "100%", md: 300 },
+                  borderRight: { md: "1px solid" },
+                  borderBottom: { xs: "1px solid", md: "none" },
+                  borderColor: "divider",
+                  overflowY: "auto",
+                  p: 1.5,
+                  flexShrink: 0,
                 }}
               >
-                <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                  {request.applicantName}
-                </Typography>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  sx={{ alignItems: "center" }}
-                >
-                  {request.compatibilityScore !== null && (
-                    <Chip
-                      label={`${request.compatibilityScore}% match`}
-                      size="small"
-                      color="success"
+                <Stack spacing={0.5}>
+                  {sortedRequests.map((request) => (
+                    <ApplicantListItem
+                      key={request._id}
+                      request={request}
+                      selected={request._id === selectedId}
+                      onSelect={() => setSelectedId(request._id)}
                     />
-                  )}
-                  <Chip
-                    label={request.status}
-                    size="small"
-                    color={
-                      request.status === "ACCEPTED"
-                        ? "success"
-                        : request.status === "REJECTED"
-                          ? "default"
-                          : "warning"
-                    }
-                  />
+                  ))}
                 </Stack>
-              </Stack>
+              </Box>
 
-              {request.message && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mb: 1, fontStyle: "italic" }}
+              <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
+                {selectedRequest && (
+                  <ApplicantDetailPanel request={selectedRequest} />
+                )}
+              </Box>
+            </Stack>
+          )}
+        </DialogContent>
+
+        {selectedRequest && (
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setProfileDialogOpen(true)}>
+              View Profile
+            </Button>
+            <Box sx={{ flex: 1 }} />
+            {selectedRequest.status === "PENDING" ? (
+              <>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  disabled={actioningId === selectedRequest._id}
+                  onClick={() => handleReject(selectedRequest._id)}
                 >
-                  "{request.message}"
-                </Typography>
-              )}
+                  Reject
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  disabled={actioningId === selectedRequest._id}
+                  onClick={() => handleAccept(selectedRequest._id)}
+                >
+                  Accept
+                </Button>
+              </>
+            ) : (
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  color:
+                    selectedRequest.status === "ACCEPTED"
+                      ? "success.main"
+                      : "text.secondary",
+                }}
+              >
+                {selectedRequest.status === "ACCEPTED"
+                  ? "Accepted"
+                  : "Rejected"}
+              </Typography>
+            )}
+          </DialogActions>
+        )}
+      </Dialog>
 
-              {request.status === "PENDING" && (
-                <Stack direction="row" spacing={1}>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    size="small"
-                    disabled={actioningId === request._id}
-                    onClick={() => handleAccept(request._id)}
-                  >
-                    Accept
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    size="small"
-                    disabled={actioningId === request._id}
-                    onClick={() => handleReject(request._id)}
-                  >
-                    Reject
-                  </Button>
-                </Stack>
-              )}
-            </Box>
-          ))}
-        </Stack>
-      </DialogContent>
-    </Dialog>
+      <HostProfileDialog
+        open={profileDialogOpen}
+        userId={selectedRequest?.applicantId ?? null}
+        onClose={() => setProfileDialogOpen(false)}
+      />
+    </>
   );
 }
