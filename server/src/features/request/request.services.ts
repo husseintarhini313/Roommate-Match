@@ -1,37 +1,36 @@
 import RoommatePost from "../roommatePost/roommatePost.model.js";
 import RoommateRequest from "./request.model.js";
 import Profile from "../profile/profile.model.js";
-import { calculateCompatibility, type Questionnaire } from "../../utils/matching.js";
-import { request } from "node:http";
+import { calculateCompatibility,getCompatibilityBreakdown, type Questionnaire } from "../../utils/matching.js";
 
-export async function createRequest(applicantId: string, postId: string, message?: string) {
+  export async function createRequest(applicantId: string, postId: string, message?: string) {
 
-  const post = await RoommatePost.findById(postId);
-  if (!post) 
-    throw new Error("Post not found");
+    const post = await RoommatePost.findById(postId);
+    if (!post) 
+      throw new Error("Post not found");
 
-  if (post.status !== "ACTIVE") {
-    throw new Error("This post is not available");
+    if (post.status !== "ACTIVE") {
+      throw new Error("This post is not available");
+    }
+
+    if (post.createdBy.toString() === applicantId) {
+      throw new Error("You can't apply to a post you have created");
+    }
+
+    const existingRequest = await RoommateRequest.findOne({ applicantId, postId });
+    if (existingRequest) {
+      throw new Error("You have already applied to that post");
+    }
+
+    const request = await RoommateRequest.create({
+      applicantId,
+      postId,
+      message,
+      status: "PENDING",
+    });
+
+    return request;
   }
-
-  if (post.createdBy.toString() === applicantId) {
-    throw new Error("You can't apply to a post you have created");
-  }
-
-  const existingRequest = await RoommateRequest.findOne({ applicantId, postId });
-  if (existingRequest) {
-    throw new Error("You have already applied to that post");
-  }
-
-  const request = await RoommateRequest.create({
-    applicantId,
-    postId,
-    message,
-    status: "PENDING",
-  });
-
-  return request;
-}
 
 
 
@@ -50,6 +49,8 @@ export async function getRequestsForPost(userId: string, postId: string){
     requests.map(async (request)=>{
       const applicantProfile = await Profile.findOne({userId: request.applicantId});
 
+      const hasQuestionnaires = ownerProfile?.questionnaire && applicantProfile?.questionnaire;
+
       const compatibilityScore= ownerProfile?.questionnaire && applicantProfile?.questionnaire ?
       calculateCompatibility(
         ownerProfile.questionnaire as Questionnaire,
@@ -57,10 +58,21 @@ export async function getRequestsForPost(userId: string, postId: string){
         post.monthlyRent + post.expenses
       ): null;
 
+      const compatibilityBreakdown = hasQuestionnaires
+        ? getCompatibilityBreakdown(
+            ownerProfile!.questionnaire as Questionnaire,
+            applicantProfile!.questionnaire as Questionnaire,
+            post.monthlyRent + post.expenses
+          )
+        : null;
+
       return {
         ...request.toObject(),
         applicantName: applicantProfile?.name ?? "Unknown",
+        applicantAge: applicantProfile?.age ?? null,
+        applicationQuestionnaire: applicantProfile?.questionnaire ?? null,
         compatibilityScore,
+        compatibilityBreakdown
       };
     })
   );
@@ -164,5 +176,20 @@ export async function acceptRequest(userId: string, requestId: string){
 }
 
 
+export async function withdrawRequest(applicantId: string, requestId: string){
 
+  const request = await RoommateRequest.findById(requestId);
+  if(!request)
+    throw new Error("Request not found")
+
+  if(request.applicantId.toString() !== applicantId)
+    throw new Error("You are not authorized to withdraw this application")
+
+  if(request.status !== "PENDING")
+    throw new Error("Only pending applications can be withdrawn")
+
+  await RoommateRequest.deleteOne({_id: requestId});
+
+  return request;
+}
 

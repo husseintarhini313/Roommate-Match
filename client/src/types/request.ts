@@ -10,7 +10,10 @@ export type RequestWithApplicant = {
   message?: string;
   status: RequestStatus;
   applicantName: string;
+  applicantAge: number | null;
+  applicantQuestionnaire: ApplicantQuestionnaire | null;
   compatibilityScore: number | null;
+  compatibilityBreakdown: CompatibilityBreakdown | null;
   createdAt: string;
 };
 
@@ -22,4 +25,26 @@ export type RequestWithPost = {
   status: RequestStatus;
   post: Post | null;
   createdAt: string;
+};
+
+export type ApplicantQuestionnaire = {
+  smokes: boolean;
+  pets: boolean;
+  sleepSchedule: "early" | "late" | "flexible";
+  noisePreference: "quiet" | "moderate" | "loud";
+  guestFrequency: "rarely" | "sometimes" | "often";
+  cleanliness: number;
+  socialLevel: number;
+  budget: number;
+};
+
+export type CompatibilityBreakdown = {
+  smokes: number;
+  sleepSchedule: number;
+  pets: number;
+  noisePreference: number;
+  guestFrequency: number;
+  cleanliness: number;
+  socialLevel: number;
+  budget: number;
 };

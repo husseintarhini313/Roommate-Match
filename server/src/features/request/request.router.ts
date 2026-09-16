@@ -1,7 +1,7 @@
 import express from "express";
 import type{Request, Response} from "express";
 import { validateToken } from "../../middlewares/authenticate.js";
-import { acceptRequest, createRequest, getMyRequests, getRequestsForPost, rejectRequest } from "./request.services.js";
+import { acceptRequest, createRequest, getMyRequests, getRequestsForPost, rejectRequest, withdrawRequest } from "./request.services.js";
 import { createRequestSchema } from "./request.schema.js";
 import { validate } from "../../middlewares/validate.js";
 
@@ -68,6 +68,20 @@ requestRouter.patch('/:requestId/accept',
 
                         res.status(200).json(request);
                     }
+)
+
+
+
+requestRouter.delete('/:requestId/withdraw',
+                      validateToken,
+                      async (req: Request, res: Response)=>{
+                        const applicantId = (req as any).userId;
+                        const requestId= req.params.requestId as string;
+                        
+                        const result = await withdrawRequest(applicantId, requestId);
+                        
+                        res.status(200).json(result);
+                      }
 )
 
 export default requestRouter;

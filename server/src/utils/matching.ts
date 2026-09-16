@@ -14,49 +14,57 @@ export const DEFAULT_WEIGHTS = {
   sleepSchedule: 0.15,
   budget: 0.15,
   cleanliness: 0.15,
-  pets: 0.10,
-  noisePreference: 0.10,
-  guestFrequency: 0.10,
-  socialLevel: 0.10,
+  pets: 0.1,
+  noisePreference: 0.1,
+  guestFrequency: 0.1,
+  socialLevel: 0.1,
 };
 
 function compareExact<T>(a: T, b: T): number {
-  return (a === b ? 1 : 0);
+  return a === b ? 1 : 0;
 }
 
 function compareNumeric(a: number, b: number, maxDifference: number): number {
-  return (1 - Math.abs(a - b) / maxDifference);
+  return 1 - Math.abs(a - b) / maxDifference;
 }
 
 function compareBudget(budget: number, totalCost: number): number {
-  if (totalCost <= budget) 
-    return 1;
-
-  return (Math.max(0, 1 - (totalCost - budget) / budget));
+  if (totalCost <= budget) return 1;
+  return Math.max(0, 1 - (totalCost - budget) / budget);
 }
 
-export function calculateCompatibility(viewer: Questionnaire, creator: Questionnaire, totalCost: number, weights= DEFAULT_WEIGHTS):number{
+function getFieldScores(viewer: Questionnaire, creator: Questionnaire, totalCost: number) {
+  return {
+    smokes: compareExact(viewer.smokes, creator.smokes),
+    sleepSchedule: compareExact(viewer.sleepSchedule, creator.sleepSchedule),
+    pets: compareExact(viewer.pets, creator.pets),
+    noisePreference: compareExact(viewer.noisePreference, creator.noisePreference),
+    guestFrequency: compareExact(viewer.guestFrequency, creator.guestFrequency),
+    cleanliness: compareNumeric(viewer.cleanliness, creator.cleanliness, 4),
+    socialLevel: compareNumeric(viewer.socialLevel, creator.socialLevel, 4),
+    budget: compareBudget(viewer.budget, totalCost),
+  };
+}
 
-    const scores= {
-        smokes: compareExact(viewer.smokes, creator.smokes),
-        sleepSchedule: compareExact(viewer.sleepSchedule, creator.sleepSchedule),
-        pets: compareExact(viewer.pets, creator.pets),
-        noisePreference: compareExact(viewer.noisePreference, creator.noisePreference),
-        guestFrequency: compareExact(viewer.guestFrequency, creator.guestFrequency),
-        cleanliness: compareNumeric(viewer.cleanliness, creator.cleanliness, 4),
-        socialLevel: compareNumeric(viewer.socialLevel, creator.socialLevel, 4),
-        budget: compareBudget(viewer.budget, totalCost),
-    }
+export function calculateCompatibility(
+  viewer: Questionnaire,
+  creator: Questionnaire,
+  totalCost: number,
+  weights = DEFAULT_WEIGHTS
+): number {
+  const scores = getFieldScores(viewer, creator, totalCost);
+  let finalScore = 0;
+  for (const key in scores) {
+    finalScore += scores[key as keyof typeof scores] * weights[key as keyof typeof weights];
+  }
+  return Math.round(finalScore * 100);
+}
 
-    const finalScore =
-        scores.smokes * weights.smokes +
-        scores.sleepSchedule * weights.sleepSchedule +
-        scores.pets * weights.pets +
-        scores.noisePreference * weights.noisePreference +
-        scores.guestFrequency * weights.guestFrequency +
-        scores.cleanliness * weights.cleanliness +
-        scores.socialLevel * weights.socialLevel +
-        scores.budget * weights.budget;
-
-        return Math.round(finalScore * 100);
+export function getCompatibilityBreakdown(viewer: Questionnaire, creator: Questionnaire, totalCost: number) {
+  const scores = getFieldScores(viewer, creator, totalCost);
+  const breakdown: Record<keyof typeof scores, number> = {} as Record<keyof typeof scores, number>;
+  for (const key in scores) {
+    breakdown[key as keyof typeof scores] = Math.round(scores[key as keyof typeof scores] * 100);
+  }
+  return breakdown;
 }

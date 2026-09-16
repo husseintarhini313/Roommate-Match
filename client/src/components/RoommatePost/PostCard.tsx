@@ -157,7 +157,11 @@ export default function PostCard({ post, actions }: PostCardProps) {
           />
         </Box>
 
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{ alignItems: "center", mb: 1 }}
+        >
           <LocationOnIcon fontSize="small" sx={{ color: "text.secondary" }} />
           <Typography variant="body2" color="text.secondary">
             {post.location}

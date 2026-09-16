@@ -62,7 +62,7 @@ export default function ProfileDetails({ profile }: ProfileDetailsProps) {
 
   return (
     <>
-      <Stack alignItems="center" spacing={1} sx={{ mb: 4 }}>
+      <Stack spacing={1} sx={{ alignItems: "center", mb: 4 }}>
         <Avatar sx={{ width: 88, height: 88, bgcolor: "primary.main" }}>
           <PersonIcon sx={{ fontSize: 48 }} />
         </Avatar>
@@ -106,7 +106,7 @@ export default function ProfileDetails({ profile }: ProfileDetailsProps) {
         </>
       )}
 
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
+      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 2 }}>
         <Box
           sx={{
             width: 32,
@@ -134,7 +134,7 @@ export default function ProfileDetails({ profile }: ProfileDetailsProps) {
           <Stack
             key={row.label}
             direction="row"
-            alignItems="center"
+            sx={{ alignItems: "center" }}
             spacing={2}
           >
             <Box sx={{ color: "primary.main", display: "flex" }}>
@@ -155,13 +155,13 @@ export default function ProfileDetails({ profile }: ProfileDetailsProps) {
 
       <Divider sx={{ mb: 3 }} />
 
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+      <Stack direction="row" spacing={1} sx={{alignItems:"center", mb: 1 }}>
         <CleaningServicesIcon sx={{ color: "primary.main" }} fontSize="small" />
         <Typography variant="subtitle2" color="text.secondary">
           CLEANLINESS
         </Typography>
       </Stack>
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 3 }}>
+      <Stack direction="row" spacing={2} sx={{ alignItems: "center", mb: 3 }}>
         <LinearProgress
           variant="determinate"
           value={(profile.questionnaire.cleanliness / 5) * 100}
@@ -172,13 +172,13 @@ export default function ProfileDetails({ profile }: ProfileDetailsProps) {
         </Typography>
       </Stack>
 
-      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+      <Stack direction="row" spacing={1} sx={{alignItems:"center", mb: 1 }}>
         <GroupsIcon sx={{ color: "secondary.main" }} fontSize="small" />
         <Typography variant="subtitle2" color="text.secondary">
           SOCIAL LEVEL
         </Typography>
       </Stack>
-      <Stack direction="row" alignItems="center" spacing={2}>
+      <Stack direction="row" sx={{alignItems:"center"}} spacing={2}>
         <LinearProgress
           variant="determinate"
           value={(profile.questionnaire.socialLevel / 5) * 100}
