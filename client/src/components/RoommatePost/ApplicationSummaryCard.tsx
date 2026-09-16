@@ -13,32 +13,41 @@ export default function ApplicationSummaryCard({
   accepted,
   rejected,
 }: ApplicationSummaryCardProps) {
-  const rows = [
-    { label: "Total Applications", value: total, color: "text.primary" },
-    { label: "Pending", value: pending, color: "#B26A00" },
-    { label: "Accepted", value: accepted, color: "success.main" },
-    { label: "Rejected", value: rejected, color: "#B23A3A" },
+  const stats = [
+    { label: "Total", value: total, color: "#2B2B2B", bg: "#F0EFED" },
+    { label: "Pending", value: pending, color: "#B26A00", bg: "#FFF4E5" },
+    { label: "Accepted", value: accepted, color: "#1E4B4A", bg: "#E6F4EA" },
+    { label: "Rejected", value: rejected, color: "#B23A3A", bg: "#FBEAEA" },
   ];
 
   return (
     <Paper elevation={0} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>
+      <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
         Application Summary
       </Typography>
-      <Stack spacing={1.5}>
-        {rows.map((row) => (
+      <Stack direction="row" spacing={1.5}>
+        {stats.map((stat) => (
           <Box
-            key={row.label}
-            sx={{ display: "flex", justifyContent: "space-between" }}
+            key={stat.label}
+            sx={{
+              flex: 1,
+              textAlign: "center",
+              bgcolor: stat.bg,
+              borderRadius: 2,
+              py: 1.5,
+            }}
           >
-            <Typography variant="body2" color="text.secondary">
-              {row.label}
+            <Typography
+              variant="caption"
+              sx={{ color: stat.color, fontWeight: 700 }}
+            >
+              {stat.label}
             </Typography>
             <Typography
-              variant="body2"
-              sx={{ fontWeight: 700, color: row.color }}
+              variant="h5"
+              sx={{ fontWeight: 700, color: stat.color }}
             >
-              {row.value}
+              {stat.value}
             </Typography>
           </Box>
         ))}

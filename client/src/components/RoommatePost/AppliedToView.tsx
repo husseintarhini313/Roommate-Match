@@ -1,22 +1,21 @@
 import { useState, useMemo } from "react";
-import { Typography, Chip, Stack, Grid, Paper } from "@mui/material";
+import { Typography, Chip, Stack, Grid } from "@mui/material";
 import ApplicationCard from "./ApplicationCard";
 import ApplicationSummaryCard from "./ApplicationSummaryCard";
 import QuickTipsCard from "./QuickTipsCard";
 import type { RequestWithPost, RequestStatus } from "../../types/request";
+import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 
 type FilterValue = "ALL" | RequestStatus;
 
 type AppliedToViewProps = {
   requests: RequestWithPost[];
   onWithdraw: (requestId: string) => void;
-  onViewDetails: (request: RequestWithPost) => void;
 };
 
 export default function AppliedToView({
   requests,
   onWithdraw,
-  onViewDetails,
 }: AppliedToViewProps) {
   const [filter, setFilter] = useState<FilterValue>("ALL");
 
@@ -43,10 +42,31 @@ export default function AppliedToView({
   return (
     <Grid container spacing={3}>
       <Grid size={{ xs: 12, md: 8 }}>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          My Applications
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
+          <AssignmentTurnedInOutlinedIcon
+            sx={{ color: "#F1664A", fontSize: 32 }}
+          />
+          <Typography
+            sx={{
+              fontWeight: 700,
+              fontSize: "32px",
+              color: "#2D2D2D",
+              lineHeight: 1.2,
+            }}
+          >
+            Track Your Applications
+          </Typography>
+        </Stack>
+        <Typography
+          sx={{
+            fontSize: "16px",
+            fontWeight: 400,
+            color: "#6B6B6B",
+            lineHeight: 1.5,
+            mt: "8px",
+            mb: "30px",
+          }}
+        >
           Here are all the listings you've applied to. Track your status and
           manage your applications.
         </Typography>
@@ -82,11 +102,7 @@ export default function AppliedToView({
           <Grid container spacing={2}>
             {filteredRequests.map((request) => (
               <Grid size={{ xs: 12, md: 6 }} key={request._id}>
-                <ApplicationCard
-                  request={request}
-                  onWithdraw={onWithdraw}
-                  onViewDetails={() => onViewDetails(request)}
-                />
+                <ApplicationCard request={request} onWithdraw={onWithdraw} />
               </Grid>
             ))}
           </Grid>
@@ -102,25 +118,6 @@ export default function AppliedToView({
             rejected={counts.REJECTED}
           />
           <QuickTipsCard />
-          <Paper
-            elevation={0}
-            sx={{
-              p: 3,
-              borderRadius: 3,
-              textAlign: "center",
-              bgcolor: "primary.main",
-            }}
-          >
-            <Typography
-              variant="body1"
-              sx={{ color: "#FFFFFF", fontWeight: 700, mb: 0.5 }}
-            >
-              Good luck finding your perfect match!
-            </Typography>
-            <Typography variant="body2" sx={{ color: "#FDF8F3" }}>
-              The right roommate is out there.
-            </Typography>
-          </Paper>
         </Stack>
       </Grid>
     </Grid>

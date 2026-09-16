@@ -1,23 +1,16 @@
-import { useState } from "react";
-import {
-  Box,
-  Typography,
-  Chip,
-  Stack,
-  Button,
-  IconButton,
-  Menu,
-  MenuItem,
-} from "@mui/material";
+import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import BedIcon from "@mui/icons-material/Bed";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
+import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
 import type { RequestWithPost } from "../../types/request";
 
 type ApplicationCardProps = {
   request: RequestWithPost;
   onWithdraw: (requestId: string) => void;
-  onViewDetails: () => void;
 };
 
 const statusConfig = {
@@ -26,150 +19,200 @@ const statusConfig = {
   REJECTED: { label: "Rejected", bg: "#FBEAEA", color: "#B23A3A" },
 };
 
+const statusBoxConfig = {
+  PENDING: { bg: "#F3F4F6", iconColor: "#6B7280", icon: ChatBubbleOutlineIcon },
+  ACCEPTED: { bg: "#E6F4EA", iconColor: "#2E7D4F", icon: CheckCircleIcon },
+  REJECTED: { bg: "#FBEAEA", iconColor: "#B23A3A", icon: CancelIcon },
+};
+
 export default function ApplicationCard({
   request,
   onWithdraw,
-  onViewDetails,
 }: ApplicationCardProps) {
-  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const post = request.post;
-  const status = statusConfig[request.status];
-
   if (!post) return null;
 
+  const status = statusConfig[request.status];
+  const statusBox = statusBoxConfig[request.status];
+  const StatusIcon = statusBox.icon;
+
   const handleWithdraw = () => {
-    setMenuAnchor(null);
-    if (confirm("Withdraw this application")) onWithdraw(request._id);
+    if (confirm("Withdraw this application?")) {
+      onWithdraw(request._id);
+    }
   };
+
+  const statusHeadline =
+    request.status === "PENDING"
+      ? `You applied on ${new Date(request.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}`
+      : request.status === "ACCEPTED"
+        ? "Your application was accepted!"
+        : "Application rejected";
+
+  const statusDescription =
+    request.status === "PENDING"
+      ? request.message
+      : request.status === "ACCEPTED"
+        ? "The host has accepted your application. You can now contact them to finalize the details."
+        : "The host has chosen another applicant.";
 
   return (
     <Box
       sx={{
-        display: "flex",
         bgcolor: "background.paper",
         borderRadius: 3,
-        overflow: "hidden",
+        p: 2,
         boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
         height: "100%",
       }}
     >
-      <Box
-        component="img"
-        src={post.images[0]}
-        alt={post.title}
-        sx={{ width: 140, minWidth: 140, objectFit: "cover" }}
-      />
-
-      <Box sx={{ flex: 1, p: 2, display: "flex", flexDirection: "column" }}>
-        <Stack
-          direction="row"
-          sx={{ justifyContent: "space-between", alignItems: "flex-start" }}
+      <Stack direction="row" spacing={2}>
+        <Box
+          sx={{ position: "relative", width: 110, height: 110, flexShrink: 0 }}
         >
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            {post.title}
-          </Typography>
-          <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+          <Box
+            component="img"
+            src={post.images[0] ?? "/placeholder-room.png"}
+            alt={post.title}
+            sx={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              borderRadius: 2,
+            }}
+          />
+          {post.images.length > 0 && (
+            <Stack
+              direction="row"
+              spacing={0.5}
+              sx={{
+                alignItems: "center",
+                position: "absolute",
+                bottom: 6,
+                left: 6,
+                bgcolor: "rgba(0,0,0,0.65)",
+                borderRadius: 999,
+                px: 1,
+                py: 0.25,
+              }}
+            >
+              <PhotoCameraOutlinedIcon
+                sx={{ fontSize: 12, color: "#FFFFFF" }}
+              />
+              <Typography sx={{ fontSize: 11, color: "#FFFFFF" }}>
+                {post.images.length} photo{post.images.length === 1 ? "" : "s"}
+              </Typography>
+            </Stack>
+          )}
+        </Box>
+
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Stack
+            direction="row"
+            sx={{ justifyContent: "space-between", alignItems: "flex-start" }}
+          >
+            <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
+              {post.title}
+            </Typography>
             <Chip
               label={status.label}
               size="small"
               sx={{ bgcolor: status.bg, color: status.color, fontWeight: 700 }}
             />
-            {request.status === "PENDING" && (
-              <IconButton
-                size="small"
-                onClick={(e) => setMenuAnchor(e.currentTarget)}
-              >
-                <MoreVertIcon fontSize="small" />
-              </IconButton>
-            )}
           </Stack>
-        </Stack>
 
-        <Stack
-          direction="row"
-          spacing={0.5}
-          sx={{
-            alignItems: "center",
-            mt: 0.5,
-          }}
-        >
-          <LocationOnIcon fontSize="small" sx={{ color: "text.secondary" }} />
-          <Typography variant="body2" color="text.secondary">
-            {post.location}
-          </Typography>
-        </Stack>
-
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{ mt: 1, flexWrap: "wrap", gap: 1 }}
-        >
-          <Chip
-            label={post.accommodationType}
-            size="small"
-            variant="outlined"
-          />
-          <Chip
-            icon={<BedIcon fontSize="small" />}
-            label={`${post.availableBeds}/${post.totalBeds} beds`}
-            size="small"
-            variant="outlined"
-          />
-        </Stack>
-
-        <Typography
-          variant="body2"
-          sx={{ mt: 1, fontWeight: 700, color: "primary.main" }}
-        >
-          ${post.monthlyRent}/month + ~${post.expenses} expenses
-        </Typography>
-
-        <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
-          Applied {new Date(request.createdAt).toLocaleDateString()}
-        </Typography>
-
-        {request.status === "PENDING" && request.message && (
-          <Typography
-            variant="body2"
-            sx={{ mt: 1, fontStyle: "italic", color: "text.secondary" }}
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{ alignItems: "center", mt: 0.5 }}
           >
-            "{request.message}"
-          </Typography>
-        )}
+            <LocationOnIcon sx={{ fontSize: 15, color: "text.secondary" }} />
+            <Typography variant="body2" color="text.secondary">
+              {post.location}
+            </Typography>
+          </Stack>
 
-        {request.status === "ACCEPTED" && (
+          <Stack direction="row" spacing={2} sx={{ mt: 1 }}>
+            <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+              <BedIcon sx={{ fontSize: 15, color: "text.secondary" }} />
+              <Typography variant="caption" color="text.secondary">
+                {post.availableBeds} beds available
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={0.5} sx={{ alignItems: "center" }}>
+              <HomeOutlinedIcon
+                sx={{ fontSize: 15, color: "text.secondary" }}
+              />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ textTransform: "capitalize" }}
+              >
+                {post.accommodationType}
+              </Typography>
+            </Stack>
+          </Stack>
+
           <Typography
-            variant="body2"
-            sx={{ mt: 1, color: "success.main", fontWeight: 600 }}
+            variant="h6"
+            sx={{ fontWeight: 700, color: "primary.main" }}
           >
-            Your application has been accepted!
+            ${post.monthlyRent}
+            <Typography component="span" variant="body2" color="text.secondary">
+              {" "}
+              /month + ~${post.expenses} expenses
+            </Typography>
           </Typography>
-        )}
+        </Box>
+      </Stack>
 
-        {request.status === "REJECTED" && (
-          <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
-            The host has chosen another applicant.
+      <Box
+        sx={{
+          display: "flex",
+          gap: 1.25,
+          alignItems: "flex-start",
+          mt: 1.5,
+          p: 1.5,
+          borderRadius: 2,
+          bgcolor: statusBox.bg,
+        }}
+      >
+        <StatusIcon
+          sx={{ color: statusBox.iconColor, fontSize: 20, mt: 0.25 }}
+        />
+        <Box>
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            {statusHeadline}
           </Typography>
-        )}
-
-        <Box sx={{ flex: 1 }} />
-
-        <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-          <Button variant="outlined" size="small" onClick={onViewDetails}>
-            View Details
-          </Button>
-        </Stack>
+          {statusDescription && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{
+                mt: 0.25,
+                fontStyle: request.status === "PENDING" ? "italic" : "normal",
+              }}
+            >
+              {request.status === "PENDING"
+                ? `"${statusDescription}"`
+                : statusDescription}
+            </Typography>
+          )}
+        </Box>
       </Box>
 
-      <Menu
-        anchorEl={menuAnchor}
-        open={Boolean(menuAnchor)}
-        onClose={() => setMenuAnchor(null)}
-      >
-        <MenuItem onClick={handleWithdraw} sx={{ color: "error.main" }}>
+      {request.status === "PENDING" && (
+        <Button
+          variant="outlined"
+          color="error"
+          size="small"
+          fullWidth
+          sx={{ mt: 1.5 }}
+          onClick={handleWithdraw}
+        >
           Withdraw Application
-        </MenuItem>
-      </Menu>
+        </Button>
+      )}
     </Box>
   );
 }

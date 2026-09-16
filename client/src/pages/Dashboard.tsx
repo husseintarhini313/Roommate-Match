@@ -17,10 +17,7 @@ import {
   IconButton,
   Tooltip,
   Snackbar,
-  Chip,
   Stack,
-  Dialog,
-  DialogContent,
 } from "@mui/material";
 import AppliedToView from "../components/RoommatePost/AppliedToView";
 import SearchIcon from "@mui/icons-material/Search";
@@ -61,9 +58,6 @@ export default function Dashboard() {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const [myRequests, setMyRequests] = useState<RequestWithPost[]>([]);
-
-  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
-  const [detailsPost, setDetailsPost] = useState<Post | null>(null);
 
   const showSnackbar = (message: string) => {
     setSnackbarOpen(false);
@@ -196,14 +190,7 @@ export default function Dashboard() {
 
     if (activeTab === "applied") {
       return (
-        <AppliedToView
-          requests={myRequests}
-          onWithdraw={handleWithdraw}
-          onViewDetails={(request) => {
-            setDetailsPost(request.post);
-            setDetailsDialogOpen(true);
-          }}
-        />
+        <AppliedToView requests={myRequests} onWithdraw={handleWithdraw} />
       );
     }
 
@@ -431,17 +418,6 @@ export default function Dashboard() {
         onClose={() => setApplicantsDialogOpen(false)}
         onActionComplete={refetchPosts}
       />
-
-      <Dialog
-        open={detailsDialogOpen}
-        onClose={() => setDetailsDialogOpen(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogContent sx={{ p: 0 }}>
-          {detailsPost && <PostCard post={detailsPost} actions={<Box />} />}
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 }
