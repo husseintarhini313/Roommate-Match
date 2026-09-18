@@ -24,6 +24,7 @@ export default function BudgetField({
         input: {
           startAdornment: <InputAdornment position="start">$</InputAdornment>,
         },
+        htmlInput: { min: 0 },
       }}
     />
   );

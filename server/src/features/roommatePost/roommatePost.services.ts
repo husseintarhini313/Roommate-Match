@@ -31,6 +31,9 @@ export async function createPost(userId:string,data:CreatePost, files: Express.M
     return post;
 }
 
+
+
+
 export async function getMyPosts(userId:string){
 
     return RoommatePost.find({createdBy: userId}).sort({createdAt:-1});
@@ -42,14 +45,21 @@ export async function getPostById(postId: string, userId: string) {
   return post;
 }
 
-export async function getPosts(userId: string, filters: {status?:string; location?:string, maxRent?:number}){
+export async function getPosts(userId: string, filters: { location?:string; maxRent?:number; accommodationType?: string; minBeds?: number; amenities?:string[]}){
 
-    const query: Record<string, unknown> = { status: filters.status ?? "ACTIVE", createdBy: { $ne: userId } };
+    const query: Record<string, unknown> = { status: "ACTIVE", createdBy: { $ne: userId } };
 
     if(filters.location)
         query.location= {$regex: filters.location, $options:"i"}
     if(filters.maxRent !== undefined)
         query.monthlyRent= {$lte: filters.maxRent}
+    if (filters.accommodationType) 
+        query.accommodationType = filters.accommodationType;
+    if (filters.minBeds !== undefined) 
+        query.availableBeds = { $gte: filters.minBeds };
+    if (filters.amenities && filters.amenities.length > 0) 
+        query.amenities = { $all: filters.amenities };
+
 
     const posts = await RoommatePost.find(query).sort({createdAt: -1});
 

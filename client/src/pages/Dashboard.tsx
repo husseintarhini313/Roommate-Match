@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Box,
   Container,
-  Tabs,
-  Tab,
   Grid,
-  TextField,
-  InputAdornment,
   Button,
   Typography,
   CircularProgress,
@@ -18,9 +14,14 @@ import {
   Tooltip,
   Snackbar,
   Stack,
+  Drawer,
 } from "@mui/material";
 import AppliedToView from "../components/RoommatePost/AppliedToView";
-import SearchIcon from "@mui/icons-material/Search";
+import BrowseView from "../components/RoommatePost/BrowseView";
+import ProfileFormPanel from "../components/Profile/ProfileFormPanel";
+import Footer from "../components/Footer";
+import type { BrowseFilters } from "../types/browseFilters";
+import { EMPTY_FILTERS } from "../types/browseFilters";
 import AddIcon from "@mui/icons-material/Add";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
@@ -32,6 +33,7 @@ import type { Post } from "../types/post";
 import HostProfileDialog from "../components/Profile/HostProfileDialog";
 import ApplicantsDialog from "../components/RoommatePost/ApplicantDialog";
 import type { RequestWithPost } from "../types/request";
+import { useScrollDirection } from "../hooks/useScrollDirection";
 
 type DashboardTab = "browse" | "mine" | "applied";
 
@@ -42,8 +44,9 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [locationFilter, setLocationFilter] = useState("");
-  const [maxRentFilter, setMaxRentFilter] = useState("");
+  const [browseFilters, setBrowseFilters] =
+    useState<BrowseFilters>(EMPTY_FILTERS);
+  const [appliedPostIds, setAppliedPostIds] = useState<Set<string>>(new Set());
 
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -57,7 +60,11 @@ export default function Dashboard() {
   const [applicantsDialogOpen, setApplicantsDialogOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+
   const [myRequests, setMyRequests] = useState<RequestWithPost[]>([]);
+
+  const scrollDirection = useScrollDirection();
 
   const showSnackbar = (message: string) => {
     setSnackbarOpen(false);
@@ -73,6 +80,14 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    async function fetchAppliedIds() {
+      const result = await apiFetch<{ postId: string }[]>("/requests/mine");
+      setAppliedPostIds(new Set(result.map((r) => r.postId)));
+    }
+    fetchAppliedIds();
+  }, []);
+
+  useEffect(() => {
     async function fetchPosts() {
       setIsLoading(true);
       setError("");
@@ -80,8 +95,15 @@ export default function Dashboard() {
       try {
         if (activeTab === "browse") {
           const params = new URLSearchParams();
-          if (locationFilter) params.append("location", locationFilter);
-          if (maxRentFilter) params.append("maxRent", maxRentFilter);
+          if (browseFilters.location)
+            params.append("location", browseFilters.location);
+          if (browseFilters.accommodationType)
+            params.append("accommodationType", browseFilters.accommodationType);
+          if (browseFilters.maxRent !== null)
+            params.append("maxRent", String(browseFilters.maxRent));
+          if (browseFilters.minBeds > 1)
+            params.append("minBeds", String(browseFilters.minBeds));
+          browseFilters.amenities.forEach((a) => params.append("amenities", a));
 
           const result = await apiFetch<Post[]>(`/posts?${params.toString()}`);
           setPosts(result);
@@ -100,7 +122,7 @@ export default function Dashboard() {
     }
 
     fetchPosts();
-  }, [activeTab, locationFilter, maxRentFilter]);
+  }, [activeTab, browseFilters]);
 
   const handleDelete = async (postId: string) => {
     if (!confirm("Are you sure you want to delete this post?")) return;
@@ -115,9 +137,7 @@ export default function Dashboard() {
 
   const handleWithdraw = async (requestId: string) => {
     try {
-      await apiFetch(`/requests/${requestId}/withdraw`, {
-        method: "DELETE",
-      });
+      await apiFetch(`/requests/${requestId}`, { method: "DELETE" });
       setMyRequests((prev) => prev.filter((r) => r._id !== requestId));
     } catch (err) {
       showSnackbar(
@@ -149,7 +169,6 @@ export default function Dashboard() {
       const updated = await apiFetch<Post>(`/posts/${postId}/reopen`, {
         method: "PATCH",
       });
-
       setPosts((prev) => prev.map((p) => (p._id === postId ? updated : p)));
     } catch (err) {
       showSnackbar(
@@ -172,6 +191,7 @@ export default function Dashboard() {
         body: JSON.stringify({ message }),
       });
 
+      setAppliedPostIds((prev) => new Set(prev).add(selectedPost._id));
       setApplyDialogOpen(false);
       showSnackbar("Application sent!");
     } catch (err) {
@@ -188,6 +208,19 @@ export default function Dashboard() {
       );
     }
 
+    if (activeTab === "browse") {
+      return (
+        <BrowseView
+          posts={posts}
+          isLoading={isLoading}
+          appliedPostIds={appliedPostIds}
+          filters={browseFilters}
+          onFiltersChange={setBrowseFilters}
+          onApplyClick={handleApplyClick}
+        />
+      );
+    }
+
     if (activeTab === "applied") {
       return (
         <AppliedToView requests={myRequests} onWithdraw={handleWithdraw} />
@@ -197,9 +230,7 @@ export default function Dashboard() {
     if (posts.length === 0) {
       return (
         <Typography color="text.secondary" align="center" sx={{ py: 8 }}>
-          {activeTab === "browse"
-            ? "No posts match your search."
-            : "You haven't posted anything yet."}
+          You haven't posted anything yet.
         </Typography>
       );
     }
@@ -211,63 +242,53 @@ export default function Dashboard() {
             <PostCard
               post={post}
               actions={
-                activeTab === "browse" ? (
+                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
                   <Button
-                    variant="contained"
+                    variant="outlined"
                     fullWidth
-                    onClick={() => handleApplyClick(post)}
+                    onClick={() => navigate(`/edit-post/${post._id}`)}
                   >
-                    Apply
+                    Edit
                   </Button>
-                ) : (
-                  <Box sx={{ display: "flex", gap: 1 }}>
+                  {post.status !== "CLOSED" && (
                     <Button
                       variant="outlined"
+                      color="warning"
                       fullWidth
-                      onClick={() => navigate(`/edit-post/${post._id}`)}
+                      onClick={() => handleClosePost(post._id)}
                     >
-                      Edit
+                      Close
                     </Button>
-                    {post.status !== "CLOSED" && (
-                      <Button
-                        variant="outlined"
-                        color="warning"
-                        fullWidth
-                        onClick={() => handleClosePost(post._id)}
-                      >
-                        Close
-                      </Button>
-                    )}
-                    {post.status === "CLOSED" && (
-                      <Button
-                        variant="outlined"
-                        color="success"
-                        fullWidth
-                        onClick={() => handleReopenPost(post._id)}
-                      >
-                        Reopen
-                      </Button>
-                    )}
+                  )}
+                  {post.status === "CLOSED" && (
                     <Button
                       variant="outlined"
+                      color="success"
                       fullWidth
-                      onClick={() => {
-                        setSelectedPostId(post._id);
-                        setApplicantsDialogOpen(true);
-                      }}
+                      onClick={() => handleReopenPost(post._id)}
                     >
-                      View Applicants
+                      Reopen
                     </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      fullWidth
-                      onClick={() => handleDelete(post._id)}
-                    >
-                      Delete
-                    </Button>
-                  </Box>
-                )
+                  )}
+                  <Button
+                    variant="outlined"
+                    fullWidth
+                    onClick={() => {
+                      setSelectedPostId(post._id);
+                      setApplicantsDialogOpen(true);
+                    }}
+                  >
+                    View Applicants
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    fullWidth
+                    onClick={() => handleDelete(post._id)}
+                  >
+                    Delete
+                  </Button>
+                </Box>
               }
             />
           </Grid>
@@ -277,15 +298,26 @@ export default function Dashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#F5EFE7" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#F5EFE7",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <AppBar
-        position="static"
+        position="fixed"
         color="transparent"
         elevation={0}
         sx={{
           borderBottom: "1px solid",
           borderColor: "divider",
           bgcolor: "background.paper",
+          transform:
+            scrollDirection === "down" ? "translateY(-100%)" : "translateY(0)",
+          transition: "transform 0.3s ease-in-out",
+          top: 0,
         }}
       >
         <Container maxWidth="xl">
@@ -302,7 +334,36 @@ export default function Dashboard() {
               </Typography>
             </Stack>
 
-            <Box sx={{ flexGrow: 1 }} />
+            <Stack direction="row" spacing={3} sx={{ ml: 5, flex: 1 }}>
+              {[
+                { value: "browse" as const, label: "Browse" },
+                { value: "mine" as const, label: "My Posts" },
+                { value: "applied" as const, label: "My Applications" },
+              ].map((tab) => (
+                <Typography
+                  key={tab.value}
+                  onClick={() => setActiveTab(tab.value)}
+                  sx={{
+                    cursor: "pointer",
+                    fontWeight: 600,
+                    color:
+                      activeTab === tab.value
+                        ? "primary.main"
+                        : "text.secondary",
+                    borderBottom: "2px solid",
+                    borderColor:
+                      activeTab === tab.value ? "primary.main" : "transparent",
+                    pb: 0.5,
+                    transition: "color 0.3s ease",
+                    "&:hover": {
+                      color: "primary.main",
+                    },
+                  }}
+                >
+                  {tab.label}
+                </Typography>
+              ))}
+            </Stack>
 
             <Button
               variant="contained"
@@ -315,7 +376,7 @@ export default function Dashboard() {
             </Button>
 
             <Tooltip title="My Profile">
-              <IconButton onClick={() => navigate("/profile")}>
+              <IconButton onClick={() => setProfileDrawerOpen(true)}>
                 <AccountCircleIcon
                   fontSize="large"
                   sx={{ color: "text.primary" }}
@@ -331,45 +392,9 @@ export default function Dashboard() {
           </Toolbar>
         </Container>
       </AppBar>
+      <Toolbar />
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(_, newValue) => setActiveTab(newValue)}
-          sx={{ mb: 3 }}
-        >
-          <Tab label="Browse" value="browse" />
-          <Tab label="My Posts" value="mine" />
-          <Tab label="My Applications" value="applied" />
-        </Tabs>
-
-        {activeTab === "browse" && (
-          <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
-            <TextField
-              placeholder="Search by location..."
-              value={locationFilter}
-              onChange={(e) => setLocationFilter(e.target.value)}
-              sx={{ flex: 2, minWidth: 240 }}
-              slotProps={{
-                input: {
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-            <TextField
-              placeholder="Max rent ($)"
-              type="number"
-              value={maxRentFilter}
-              onChange={(e) => setMaxRentFilter(e.target.value)}
-              sx={{ flex: 1, minWidth: 160 }}
-            />
-          </Box>
-        )}
-
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
@@ -418,6 +443,21 @@ export default function Dashboard() {
         onClose={() => setApplicantsDialogOpen(false)}
         onActionComplete={refetchPosts}
       />
+
+      <Drawer
+        anchor="right"
+        open={profileDrawerOpen}
+        onClose={() => setProfileDrawerOpen(false)}
+      >
+        <Box sx={{ width: 420, p: 4 }}>
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
+            My Profile
+          </Typography>
+          <ProfileFormPanel onCreated={() => setProfileDrawerOpen(false)} />
+        </Box>
+      </Drawer>
+
+      <Footer />
     </Box>
   );
 }
