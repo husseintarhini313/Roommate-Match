@@ -14,9 +14,12 @@ import {
   Tooltip,
   Snackbar,
   Stack,
+  Drawer,
 } from "@mui/material";
 import AppliedToView from "../components/RoommatePost/AppliedToView";
 import BrowseView from "../components/RoommatePost/BrowseView";
+import ProfileFormPanel from "../components/Profile/ProfileFormPanel";
+import Footer from "../components/Footer";
 import type { BrowseFilters } from "../types/browseFilters";
 import { EMPTY_FILTERS } from "../types/browseFilters";
 import AddIcon from "@mui/icons-material/Add";
@@ -30,6 +33,7 @@ import type { Post } from "../types/post";
 import HostProfileDialog from "../components/Profile/HostProfileDialog";
 import ApplicantsDialog from "../components/RoommatePost/ApplicantDialog";
 import type { RequestWithPost } from "../types/request";
+import { useScrollDirection } from "../hooks/useScrollDirection";
 
 type DashboardTab = "browse" | "mine" | "applied";
 
@@ -56,7 +60,11 @@ export default function Dashboard() {
   const [applicantsDialogOpen, setApplicantsDialogOpen] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
+  const [profileDrawerOpen, setProfileDrawerOpen] = useState(false);
+
   const [myRequests, setMyRequests] = useState<RequestWithPost[]>([]);
+
+  const scrollDirection = useScrollDirection();
 
   const showSnackbar = (message: string) => {
     setSnackbarOpen(false);
@@ -290,15 +298,26 @@ export default function Dashboard() {
   }
 
   return (
-    <Box sx={{ minHeight: "100vh", bgcolor: "#F5EFE7" }}>
+    <Box
+      sx={{
+        minHeight: "100vh",
+        bgcolor: "#F5EFE7",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       <AppBar
-        position="static"
+        position="fixed"
         color="transparent"
         elevation={0}
         sx={{
           borderBottom: "1px solid",
           borderColor: "divider",
           bgcolor: "background.paper",
+          transform:
+            scrollDirection === "down" ? "translateY(-100%)" : "translateY(0)",
+          transition: "transform 0.3s ease-in-out",
+          top: 0,
         }}
       >
         <Container maxWidth="xl">
@@ -335,6 +354,10 @@ export default function Dashboard() {
                     borderColor:
                       activeTab === tab.value ? "primary.main" : "transparent",
                     pb: 0.5,
+                    transition: "color 0.3s ease",
+                    "&:hover": {
+                      color: "primary.main",
+                    },
                   }}
                 >
                   {tab.label}
@@ -353,7 +376,7 @@ export default function Dashboard() {
             </Button>
 
             <Tooltip title="My Profile">
-              <IconButton onClick={() => navigate("/profile")}>
+              <IconButton onClick={() => setProfileDrawerOpen(true)}>
                 <AccountCircleIcon
                   fontSize="large"
                   sx={{ color: "text.primary" }}
@@ -369,8 +392,9 @@ export default function Dashboard() {
           </Toolbar>
         </Container>
       </AppBar>
+      <Toolbar />
 
-      <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Container maxWidth="xl" sx={{ py: 4, flex: 1 }}>
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
@@ -419,6 +443,21 @@ export default function Dashboard() {
         onClose={() => setApplicantsDialogOpen(false)}
         onActionComplete={refetchPosts}
       />
+
+      <Drawer
+        anchor="right"
+        open={profileDrawerOpen}
+        onClose={() => setProfileDrawerOpen(false)}
+      >
+        <Box sx={{ width: 420, p: 4 }}>
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
+            My Profile
+          </Typography>
+          <ProfileFormPanel onCreated={() => setProfileDrawerOpen(false)} />
+        </Box>
+      </Drawer>
+
+      <Footer />
     </Box>
   );
 }

@@ -27,12 +27,16 @@ postRouter.get('/',
                 async (req: Request, res:Response)=>{
 
                      const userId= (req as any).userId;
-                     const { status, location, maxRent } = req.query;
+                     const {location, maxRent, accommodationType,minBeds, amenities} = req.query;
 
                      const posts = await getPosts(userId, {
-                            status: status as string | undefined,
                             location: location as string | undefined,
                             maxRent: maxRent ? Number(maxRent) : undefined,
+                            accommodationType: accommodationType as string | undefined,
+                            minBeds: minBeds ? Number(minBeds) : undefined,
+                            amenities: amenities ? Array.isArray(amenities) ? (amenities as string []) 
+                            : 
+                            [amenities as string]: undefined,
                      });
 
                      res.status(200).json(posts);
