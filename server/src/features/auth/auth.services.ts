@@ -1,8 +1,9 @@
 import type {Signup, Signin, ForgotPassword, ResetPassword} from "./auth.schema.js";
 import User from "./auth.model.js";
 import { comparePassword } from "../../utils/hash.js";
-import { generateToken, generateResetToken, hashResetToken } from "../../utils/token.js";
+import { generateToken, generateResetToken, hashResetToken, generateRefreshToken, verifyRefreshToken } from "../../utils/token.js";
 import {sendResetEmail} from "../../utils/email.js";
+import RefreshToken from "./refreshToken.model.js";
 
 export async function signupUser({email, password}: Signup ){
 
@@ -17,8 +18,37 @@ export async function signupUser({email, password}: Signup ){
     return {id:user._id,email:user.email};
 }
 
+export async function refreshAccessToken(refreshTokenValue: string | undefined){
+
+    if(!refreshTokenValue)
+        throw new Error("No refresh token found")
+
+    const hashedValue = hashResetToken(refreshTokenValue);
+    const storedToken =  await RefreshToken.findOne({token: hashedValue});
+
+    if(!storedToken)
+        throw new Error("Invalid refresh token")
+
+    let decoded;
+
+    try{
+        decoded = verifyRefreshToken(refreshTokenValue);
+    }catch{
+        throw new Error("Invalid or expired refresh token")
+    }
+
+    const newAccessToken = generateToken(storedToken.userId);
+
+    return {token: newAccessToken, userId: decoded.id}
+}
 
 
+export async function logoutUser(refreshTokenValue: string | undefined){
+    if(refreshTokenValue){
+        const hashedValue= hashResetToken(refreshTokenValue);
+        await RefreshToken.deleteOne({token: hashedValue})
+    }
+}
 
 export async function signinUser({email, password}:Signin){
 
@@ -33,8 +63,15 @@ export async function signinUser({email, password}:Signin){
         throw new Error("Invalid email or password");
 
     const token=generateToken(findUser._id);
+    const refreshToken = generateRefreshToken(findUser._id);
+    const hashedRefreshedToken= hashResetToken(refreshToken);
 
-    return {id: findUser._id, email: findUser.email, token};
+    await RefreshToken.create({
+        token: hashedRefreshedToken,
+        userId: findUser._id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+    })
+    return {id: findUser._id, email: findUser.email, token, refreshToken};
 }
 
 

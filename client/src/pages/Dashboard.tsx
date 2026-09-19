@@ -146,7 +146,11 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiFetch("/auth/logout", {
+      method: "POST",
+    });
+
     localStorage.removeItem("token");
     navigate("/");
   };

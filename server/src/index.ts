@@ -6,6 +6,7 @@ import cors from "cors";
 import profileRouter from "./features/profile/profile.router.js";
 import postRouter from "./features/roommatePost/roommatePost.router.js";
 import requestRouter from "./features/request/request.router.js";
+import cookieParser from "cookie-parser";
 
 await db;
 
@@ -14,19 +15,20 @@ const app= express();
 const Port= process.env.PORT || 3000;
 
 app.use(cors({
-    origin:"http://localhost:5173"
+    origin:"http://localhost:5173",
+    credentials: true
 }));
 
 app.use(express.json());
-
+app.use(cookieParser());
 
 app.use('/api/auth', userRouter);
 app.use('/api/profile', profileRouter);
 app.use('/api/posts', postRouter);
 app.use("/api/requests", requestRouter);
 
+app.use(errorHandler);
+
 app.listen(Port, ()=>{
     console.log(`Server is running on port ${Port}`);
 });
-
-app.use(errorHandler);
