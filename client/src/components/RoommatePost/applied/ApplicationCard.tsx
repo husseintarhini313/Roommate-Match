@@ -6,7 +6,7 @@ import PhotoCameraOutlinedIcon from "@mui/icons-material/PhotoCameraOutlined";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import type { RequestWithPost } from "../../types/request";
+import type { RequestWithPost } from "../../../types/request";
 
 type ApplicationCardProps = {
   request: RequestWithPost;

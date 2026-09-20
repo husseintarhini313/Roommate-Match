@@ -9,17 +9,17 @@ import {
   CircularProgress,
 } from "@mui/material";
 
-import NameField from "./NameField";
-import AgeField from "./AgeField";
-import BioField from "./BioField";
-import SmokesToggle from "./SmokesToggle";
-import PetsToggle from "./PetsToggle";
-import SleepScheduleSelect from "./SleepScheduleSelect";
-import NoisePreferenceSelect from "./NoisePreferenceSelect";
-import GuestFrequencySelect from "./GuestFrequencySelect";
-import CleanlinessSlider from "./CleanlinessSlider";
-import SocialLevelSlider from "./SocialLevelSlider";
-import BudgetField from "./BudgetField";
+import NameField from "./fields/NameField";
+import AgeField from "./fields/AgeField";
+import BioField from "./fields/BioField";
+import SmokesToggle from "./fields/SmokesToggle";
+import PetsToggle from "./fields/PetsToggle";
+import SleepScheduleSelect from "./fields/SleepScheduleSelect";
+import NoisePreferenceSelect from "./fields/NoisePreferenceSelect";
+import GuestFrequencySelect from "./fields/GuestFrequencySelect";
+import CleanlinessSlider from "./fields/CleanlinessSlider";
+import SocialLevelSlider from "./fields/SocialLevelSlider";
+import BudgetField from "./fields/BudgetField";
 import ProfileActions from "./ProfileActions";
 
 type Profile = {

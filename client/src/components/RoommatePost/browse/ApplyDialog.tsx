@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import BedIcon from "@mui/icons-material/Bed";
-import type { Post } from "../../types/post";
+import type { Post } from "../../../types/post";
 
 type ApplyDialogProps = {
   open: boolean;
@@ -51,7 +51,11 @@ export default function ApplyDialog({
           {post.title}
         </Typography>
 
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mb: 1 }}>
+        <Stack
+          direction="row"
+          spacing={0.5}
+          sx={{ alignItems: "center", mb: 1 }}
+        >
           <LocationOnIcon fontSize="small" sx={{ color: "text.secondary" }} />
           <Typography variant="body2" color="text.secondary">
             {post.location}
@@ -90,8 +94,10 @@ export default function ApplyDialog({
           </Typography>
           <Stack
             direction="row"
-            alignItems="center"
-            justifyContent="space-between"
+            sx={{
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
           >
             <Typography variant="body1">{post.creatorName}</Typography>
             <Button size="small" onClick={() => onViewProfile(post.createdBy)}>

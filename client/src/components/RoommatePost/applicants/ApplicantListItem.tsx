@@ -1,5 +1,5 @@
 import { Box, Avatar, Typography, Chip, Stack } from "@mui/material";
-import type { RequestWithApplicant } from "../../types/request";
+import type { RequestWithApplicant } from "../../../types/request";
 
 type ApplicantListItemProps = {
   request: RequestWithApplicant;
@@ -55,8 +55,10 @@ export default function ApplicantListItem({
         <Stack
           direction="row"
           spacing={0.75}
-          alignItems="center"
-          sx={{ mt: 0.5 }}
+          sx={{
+            alignItems: "center",
+            mt: 0.5,
+          }}
         >
           {request.compatibilityScore !== null && (
             <Typography

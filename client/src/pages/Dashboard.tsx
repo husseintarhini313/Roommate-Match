@@ -16,8 +16,8 @@ import {
   Stack,
   Drawer,
 } from "@mui/material";
-import AppliedToView from "../components/RoommatePost/AppliedToView";
-import BrowseView from "../components/RoommatePost/BrowseView";
+import AppliedToView from "../components/RoommatePost/applied/AppliedToView";
+import BrowseView from "../components/RoommatePost/browse/BrowseView";
 import ProfileFormPanel from "../components/Profile/ProfileFormPanel";
 import Footer from "../components/Footer";
 import type { BrowseFilters } from "../types/browseFilters";
@@ -28,10 +28,10 @@ import HomeWorkOutlinedIcon from "@mui/icons-material/HomeWorkOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { apiFetch } from "../api/client";
 import PostCard from "../components/RoommatePost/PostCard";
-import ApplyDialog from "../components/RoommatePost/ApplyDialog";
+import ApplyDialog from "../components/RoommatePost/browse/ApplyDialog";
 import type { Post } from "../types/post";
 import HostProfileDialog from "../components/Profile/HostProfileDialog";
-import ApplicantsDialog from "../components/RoommatePost/ApplicantDialog";
+import ApplicantsDialog from "../components/RoommatePost/applicants/ApplicantsDialog";
 import type { RequestWithPost } from "../types/request";
 import { useScrollDirection } from "../hooks/useScrollDirection";
 

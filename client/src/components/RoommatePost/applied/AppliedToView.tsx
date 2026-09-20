@@ -3,7 +3,7 @@ import { Typography, Chip, Stack, Grid } from "@mui/material";
 import ApplicationCard from "./ApplicationCard";
 import ApplicationSummaryCard from "./ApplicationSummaryCard";
 import QuickTipsCard from "./QuickTipsCard";
-import type { RequestWithPost, RequestStatus } from "../../types/request";
+import type { RequestWithPost, RequestStatus } from "../../../types/request";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 
 type FilterValue = "ALL" | RequestStatus;

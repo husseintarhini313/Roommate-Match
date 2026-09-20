@@ -11,18 +11,18 @@ import {
   Alert,
   Button,
 } from "@mui/material";
-import TitleField from "../components/RoommatePost/TitleField";
-import DescriptionField from "../components/RoommatePost/DescriptionField";
-import LocationField from "../components/RoommatePost/LocationField";
-import AccommodationTypeSelect from "../components/RoommatePost/AccommodationTypeSelect";
-import TotalBedsField from "../components/RoommatePost/TotalBedsField";
-import AvailableBedsField from "../components/RoommatePost/AvailableBedsField";
-import MonthlyRentField from "../components/RoommatePost/MonthlyRentField";
-import ExpensesField from "../components/RoommatePost/ExpensesField";
-import AmenitiesInput from "../components/RoommatePost/AmenitiesInput";
-import RulesField from "../components/RoommatePost/RulesField";
-import AvailableFromField from "../components/RoommatePost/AvailableFromField";
-import ImageUploadField from "../components/RoommatePost/ImageUploadField";
+import TitleField from "../components/RoommatePost/fields/TitleField";
+import DescriptionField from "../components/RoommatePost/fields/DescriptionField";
+import LocationField from "../components/RoommatePost/fields/LocationField";
+import AccommodationTypeSelect from "../components/RoommatePost/fields/AccommodationTypeSelect";
+import TotalBedsField from "../components/RoommatePost/fields/TotalBedsField";
+import AvailableBedsField from "../components/RoommatePost/fields/AvailableBedsField";
+import MonthlyRentField from "../components/RoommatePost/fields/MonthlyRentField";
+import ExpensesField from "../components/RoommatePost/fields/ExpensesField";
+import AmenitiesInput from "../components/RoommatePost/fields/AmenitiesInput";
+import RulesField from "../components/RoommatePost/fields/RulesField";
+import AvailableFromField from "../components/RoommatePost/fields/AvailableFromField";
+import ImageUploadField from "../components/RoommatePost/fields/ImageUploadField";
 import type { Post, PostFormData } from "../types/post";
 
 export default function CreatePost() {

@@ -10,12 +10,12 @@ import {
 } from "@mui/material";
 import TuneIcon from "@mui/icons-material/Tune";
 import HomeIcon from "@mui/icons-material/Home";
-import PostCard from "./PostCard";
+import PostCard from "../PostCard";
 import FilterDialog from "./FilterDialog";
-import { EMPTY_FILTERS } from "../../types/browseFilters";
-import type { BrowseFilters } from "../../types/browseFilters";
+import { EMPTY_FILTERS } from "../../../types/browseFilters";
+import type { BrowseFilters } from "../../../types/browseFilters";
 import ActiveFilterChips from "./ActiveFilterChips";
-import type { Post } from "../../types/post";
+import type { Post } from "../../../types/post";
 
 type BrowseViewProps = {
   posts: Post[];
