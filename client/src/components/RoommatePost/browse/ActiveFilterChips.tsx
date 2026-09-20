@@ -1,6 +1,6 @@
 import { Stack, Chip } from "@mui/material";
-import { EMPTY_FILTERS } from "../../types/browseFilters";
-import type { BrowseFilters } from "../../types/browseFilters";
+import { EMPTY_FILTERS } from "../../../types/browseFilters";
+import type { BrowseFilters } from "../../../types/browseFilters";
 
 type ActiveFilterChipsProps = {
   filters: BrowseFilters;

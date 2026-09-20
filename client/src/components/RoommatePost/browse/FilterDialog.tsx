@@ -16,8 +16,8 @@ import {
   Stack,
   InputAdornment,
 } from "@mui/material";
-import { EMPTY_FILTERS } from "../../types/browseFilters";
-import type { BrowseFilters } from "../../types/browseFilters";
+import { EMPTY_FILTERS } from "../../../types/browseFilters";
+import type { BrowseFilters } from "../../../types/browseFilters";
 
 type FilterDialogProps = {
   open: boolean;

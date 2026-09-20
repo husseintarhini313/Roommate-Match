@@ -15,11 +15,11 @@ import {
   useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { apiFetch } from "../../api/client";
-import type { RequestWithApplicant } from "../../types/request";
+import { apiFetch } from "../../../api/client";
+import type { RequestWithApplicant } from "../../../types/request";
 import ApplicantListItem from "./ApplicantListItem";
 import ApplicantDetailPanel from "./ApplicantDetailPanel";
-import HostProfileDialog from "../Profile/HostProfileDialog";
+import HostProfileDialog from "../../Profile/HostProfileDialog";
 
 type ApplicantDialogProps = {
   open: boolean;

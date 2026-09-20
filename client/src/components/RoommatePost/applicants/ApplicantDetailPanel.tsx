@@ -8,7 +8,7 @@ import GroupsIcon from "@mui/icons-material/Groups";
 import CleaningServicesIcon from "@mui/icons-material/CleaningServices";
 import PaidOutlinedIcon from "@mui/icons-material/PaidOutlined";
 import CompatibilityBreakdownRow from "./CompatibilityBreakdownRow";
-import type { RequestWithApplicant } from "../../types/request";
+import type { RequestWithApplicant } from "../../../types/request";
 
 type ApplicantDetailPanelProps = {
   request: RequestWithApplicant;
