@@ -9,13 +9,33 @@ function getJwtSecret():string{
     return secret;
 }
 
+function getRefreshSecret():string{
+    const secret = process.env.JWT_REFRESH_SECRET;
+    if(!secret)
+        throw new Error("JWT_REFRESH_SECRET is not defined inside .env")
+    return secret;
+}
+
+
 export function generateToken(id:Types.ObjectId){
-    return jwt.sign({id: id.toString()}, getJwtSecret(),{expiresIn:"7d"});
+    return jwt.sign({id: id.toString()}, getJwtSecret(),{expiresIn:"15m"});
 }
 
 export function verifyToken(token:string){
     return jwt.verify(token, getJwtSecret()) as {id:string};
 }
+
+
+
+export function generateRefreshToken(id: Types.ObjectId){
+    return jwt.sign({ id: id.toString() }, getRefreshSecret(), { expiresIn: "7d" });
+}
+
+export function verifyRefreshToken(token: string){
+    return jwt.verify(token, getRefreshSecret()) as { id: string };
+}
+
+
 
 export function generateResetToken(){
     return crypto.randomBytes(32).toString("hex");
