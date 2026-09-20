@@ -29,6 +29,11 @@ export async function refreshAccessToken(refreshTokenValue: string | undefined){
     if(!storedToken)
         throw new Error("Invalid refresh token")
 
+    if(storedToken.isUsed){
+        await RefreshToken.deleteMany({familyId: storedToken.familyId});
+        throw new Error("Refresh Token reuse detected. All sessions have been logged out.")
+    }
+
     let decoded;
 
     try{
@@ -37,17 +42,37 @@ export async function refreshAccessToken(refreshTokenValue: string | undefined){
         throw new Error("Invalid or expired refresh token")
     }
 
+    storedToken.isUsed = true;
+    await storedToken.save();
+
+    const newRefreshToken = generateRefreshToken(storedToken.userId)
+    const hashedNewRefreshToken= hashResetToken(newRefreshToken);
+
+    await RefreshToken.create({
+        token: hashedNewRefreshToken,
+        userId: storedToken.userId,
+        familyId: storedToken.familyId,
+        isUsed: false,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    })
+
+
     const newAccessToken = generateToken(storedToken.userId);
 
-    return {token: newAccessToken, userId: decoded.id}
+    return {token: newAccessToken,refreshToken: newRefreshToken, userId: decoded.id}
 }
 
 
 export async function logoutUser(refreshTokenValue: string | undefined){
-    if(refreshTokenValue){
-        const hashedValue= hashResetToken(refreshTokenValue);
-        await RefreshToken.deleteOne({token: hashedValue})
-    }
+    
+    if(!refreshTokenValue)
+        return;
+
+    const hashedValue = hashResetToken(refreshTokenValue);
+    const storedToken = await RefreshToken.findOne({token: hashedValue})
+
+    if(storedToken)
+        await RefreshToken.deleteMany({familyId: storedToken.familyId})
 }
 
 export async function signinUser({email, password}:Signin){
@@ -62,6 +87,8 @@ export async function signinUser({email, password}:Signin){
     if(!isMatch)
         throw new Error("Invalid email or password");
 
+    const familyId = crypto.randomUUID();
+
     const token=generateToken(findUser._id);
     const refreshToken = generateRefreshToken(findUser._id);
     const hashedRefreshedToken= hashResetToken(refreshToken);
@@ -69,6 +96,8 @@ export async function signinUser({email, password}:Signin){
     await RefreshToken.create({
         token: hashedRefreshedToken,
         userId: findUser._id,
+        familyId,
+        isUsed: false,
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     })
     return {id: findUser._id, email: findUser.email, token, refreshToken};

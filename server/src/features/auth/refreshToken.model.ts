@@ -12,6 +12,15 @@ const refreshTokenSchema = new Schema({
         ref:"User",
         required: true
     },
+    familyId:{
+        type: String,
+        required: true,
+        index: true
+    },
+    isUsed:{
+        type: Boolean,
+        default: false
+    },
     expiresAt:{
         type: Date,
         required: true,

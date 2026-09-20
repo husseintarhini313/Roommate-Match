@@ -43,11 +43,23 @@ userRouter.post('/signin',
 
 userRouter.post('/refresh',
                  async (req:Request, res: Response)=>{
-                    const refreshToken = req.cookies.refreshToken;
-                    const result = await refreshAccessToken(refreshToken);
+                    try{
+                        const refreshToken = req.cookies.refreshToken;
+                        const result = await refreshAccessToken(refreshToken);
+                        
+                        res.cookie("refreshToken", result.refreshToken,{
+                            httpOnly: true,
+                            secure: process.env.NODE_ENV === "production",
+                            sameSite: "strict",
+                            maxAge: 7 * 24 * 60 * 60 * 1000, 
+                        });
 
-                    res.status(200).json({token: result.token})
-                 }
+                        res.status(200).json({token: result.token})
+                    }catch(err){
+                        const message = err instanceof Error ? err.message : "Invalid refresh token";
+                        res.status(401).json({ message });
+                    }
+            }
 )
 
 userRouter.post('/logout',
