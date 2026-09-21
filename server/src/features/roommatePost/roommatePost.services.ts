@@ -115,7 +115,7 @@ export async function updatePost(userId: string,postId: string,data: UpdatePost,
   const post = await RoommatePost.findOneAndUpdate(
     { _id: postId, createdBy: userId },
     { $set: updateData },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   if (!post) throw new Error("Post not found");
@@ -128,7 +128,7 @@ export async function closePost(userId:string, postId:string){
     const post = await RoommatePost.findOneAndUpdate(
         {createdBy:userId,_id:postId},
         {$set:{status: "CLOSED"}},
-        {new:true}
+        { returnDocument: "after" }
     );
 
     if(!post)
@@ -150,7 +150,7 @@ export async function reopenPost(userId: string, postId: string) {
   const updated = await RoommatePost.findOneAndUpdate(
     { _id: postId, createdBy: userId },
     { $set: { status: newStatus } },
-    { new: true }
+    { returnDocument: "after" }
   );
 
   return updated;

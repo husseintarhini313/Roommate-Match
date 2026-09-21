@@ -25,7 +25,7 @@ export default function ApplicationSummaryCard({
       <Typography variant="h6" sx={{ fontWeight: 800, mb: 2 }}>
         Application Summary
       </Typography>
-      <Stack direction="row" spacing={1.5}>
+      <Stack direction="row" spacing={2}>
         {stats.map((stat) => (
           <Box
             key={stat.label}

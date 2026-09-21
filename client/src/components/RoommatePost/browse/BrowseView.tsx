@@ -113,7 +113,7 @@ export default function BrowseView({
         >
           <Box>
             <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <HomeIcon sx={{ color: "primary.main" }} />
+              <HomeIcon sx={{ color: "primary.main", fontSize: 32 }} />
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 Find Your Perfect Roommate
               </Typography>

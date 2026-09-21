@@ -3,6 +3,7 @@ import { Typography, Chip, Stack, Grid } from "@mui/material";
 import ApplicationCard from "./ApplicationCard";
 import ApplicationSummaryCard from "./ApplicationSummaryCard";
 import QuickTipsCard from "./QuickTipsCard";
+import BrowseMoreCard from "./BrowseMoreCard";
 import type { RequestWithPost, RequestStatus } from "../../../types/request";
 import AssignmentTurnedInOutlinedIcon from "@mui/icons-material/AssignmentTurnedInOutlined";
 
@@ -11,11 +12,13 @@ type FilterValue = "ALL" | RequestStatus;
 type AppliedToViewProps = {
   requests: RequestWithPost[];
   onWithdraw: (requestId: string) => void;
+  onBrowseClick: () => void;
 };
 
 export default function AppliedToView({
   requests,
   onWithdraw,
+  onBrowseClick,
 }: AppliedToViewProps) {
   const [filter, setFilter] = useState<FilterValue>("ALL");
 
@@ -110,7 +113,7 @@ export default function AppliedToView({
       </Grid>
 
       <Grid size={{ xs: 12, md: 4 }}>
-        <Stack spacing={2}>
+        <Stack spacing={2} sx={{ position: "sticky", top: { xs: 88, md: 96 } }}>
           <ApplicationSummaryCard
             total={counts.ALL}
             pending={counts.PENDING}
@@ -118,6 +121,7 @@ export default function AppliedToView({
             rejected={counts.REJECTED}
           />
           <QuickTipsCard />
+          <BrowseMoreCard onBrowseClick={onBrowseClick} />
         </Stack>
       </Grid>
     </Grid>

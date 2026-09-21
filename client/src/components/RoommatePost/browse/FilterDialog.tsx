@@ -10,8 +10,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Slider,
-  Typography,
   Autocomplete,
   Stack,
   InputAdornment,
@@ -91,21 +89,22 @@ export default function FilterDialog({
             }}
           />
 
-          <Stack spacing={0.5}>
-            <Typography gutterBottom>
-              Minimum Available Beds: {draft.minBeds}
-            </Typography>
-            <Slider
-              value={draft.minBeds}
-              min={1}
-              max={8}
-              step={1}
-              marks
-              onChange={(_, value) =>
-                setDraft({ ...draft, minBeds: value as number })
+          <TextField
+            label="Minimum Available Beds"
+            type="number"
+            value={draft.minBeds}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              setDraft({ ...draft, minBeds: isNaN(value) ? 1 : value });
+            }}
+            onBlur={() => {
+              if (draft.minBeds < 1) {
+                setDraft((prev) => ({ ...prev, minBeds: 1 }));
               }
-            />
-          </Stack>
+            }}
+            fullWidth
+            slotProps={{ htmlInput: { min: 1 } }}
+          />
 
           <Autocomplete
             multiple

@@ -72,7 +72,7 @@ requestRouter.patch('/:requestId/accept',
 
 
 
-requestRouter.delete('/:requestId/withdraw',
+requestRouter.delete('/:requestId',
                       validateToken,
                       async (req: Request, res: Response)=>{
                         const applicantId = (req as any).userId;
