@@ -227,7 +227,11 @@ export default function Dashboard() {
 
     if (activeTab === "applied") {
       return (
-        <AppliedToView requests={myRequests} onWithdraw={handleWithdraw} />
+        <AppliedToView
+          requests={myRequests}
+          onWithdraw={handleWithdraw}
+          onBrowseClick={() => setActiveTab("browse")}
+        />
       );
     }
 

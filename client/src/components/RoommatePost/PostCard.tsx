@@ -153,7 +153,13 @@ export default function PostCard({ post, actions }: PostCardProps) {
                   ? "warning"
                   : "default"
             }
-            sx={{ ml: "auto" }}
+            sx={{
+              ml: "auto",
+              ...(post.status === "ACTIVE" && {
+                color: "#FFFF",
+                fontWeight: 700,
+              }),
+            }}
           />
         </Box>
 
@@ -173,7 +179,11 @@ export default function PostCard({ post, actions }: PostCardProps) {
           spacing={1}
           sx={{ mb: 1, flexWrap: "wrap", gap: 1 }}
         >
-          <Chip label={post.accommodationType} size="small" />
+          <Chip
+            label={post.accommodationType}
+            size="small"
+            sx={{ textTransform: "capitalize" }}
+          />
           <Chip
             icon={<BedIcon fontSize="small" />}
             label={`${post.availableBeds}/${post.totalBeds} beds available`}
@@ -217,18 +227,30 @@ export default function PostCard({ post, actions }: PostCardProps) {
           </Stack>
         )}
 
-        <Typography
-          variant="body2"
-          sx={{
-            mb: 2,
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
-          {post.description}
-        </Typography>
+        <Box sx={{ mb: 2, p: 1.5, bgcolor: "#F5EFE7", borderRadius: 2 }}>
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              fontWeight: 700,
+              display: "block",
+              mb: 0.5,
+            }}
+          >
+            DESCRIPTION
+          </Typography>
+          <Typography
+            variant="body2"
+            sx={{
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {post.description}
+          </Typography>
+        </Box>
 
         <Typography
           variant="h6"
