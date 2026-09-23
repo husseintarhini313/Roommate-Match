@@ -131,7 +131,9 @@ export default function Dashboard() {
       await apiFetch(`/posts/${postId}`, { method: "DELETE" });
       setPosts((prev) => prev.filter((p) => p._id !== postId));
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete post");
+      showSnackbar(
+        err instanceof Error ? err.message : "Failed to delete post",
+      );
     }
   };
 
