@@ -5,7 +5,7 @@ import {forgotPasswordSchema, resetPasswordSchema, signinSchema, signupSchema} f
 import {validate} from "../../middlewares/validate.js";
 import {resetPasswordLimiter} from "../../middlewares/rateLimiter.js";
 import { recordFailedLogin, checkLoginBlock, recordSuccessfulLogin } from "../../middlewares/loginAttemptTracker.js";
-import {checkIpBlock} from "../../middlewares/ipAttemptTracker.js"
+import {checkIpBlock,recordFailedLoginByIp} from "../../middlewares/ipAttemptTracker.js"
 
 const userRouter= express.Router();
 
@@ -37,6 +37,7 @@ userRouter.post('/signin',
                         
                     }catch(err){
                         recordFailedLogin(req.body.email);
+                        recordFailedLoginByIp(req.ip!);
                         throw err;
                     }
 });
